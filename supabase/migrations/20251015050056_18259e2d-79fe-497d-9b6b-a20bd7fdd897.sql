@@ -1,418 +1,386 @@
--- Create enum for app roles
-CREATE TYPE public.app_role AS ENUM ('donor', 'ngo', 'admin', 'volunteer');
-
--- Create enum for donation categories
-CREATE TYPE public.donation_category AS ENUM ('stationary', 'books', 'clothes', 'electronics', 'money');
-
--- Create enum for donation status
-CREATE TYPE public.donation_status AS ENUM ('Requested', 'Accepted', 'Volunteer Assigned', 'Picked Up', 'Delivered', 'Cancelled', 'Rejected');
-
--- Create enum for pickup status
-CREATE TYPE public.pickup_status AS ENUM ('Assigned', 'En route', 'Picked Up', 'Delivered', 'Cancelled');
-
--- Create profiles table
-CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  role public.app_role NOT NULL,
-  full_name TEXT NOT NULL,
-  phone TEXT,
-  address TEXT,
-  city TEXT,
-  state TEXT,
-  pincode TEXT,
-  lat NUMERIC,
-  lng NUMERIC,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Enable RLS on profiles
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
--- Profiles policies
-CREATE POLICY "Users can view all profiles"
-  ON public.profiles FOR SELECT
-  USING (true);
-
-CREATE POLICY "Users can update own profile"
-  ON public.profiles FOR UPDATE
-  USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own profile"
-  ON public.profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
-
--- Create user_roles table for RBAC
-CREATE TABLE public.user_roles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  role public.app_role NOT NULL,
-  UNIQUE (user_id, role)
-);
-
-ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
-
--- User roles policies
-CREATE POLICY "Users can view their own roles"
-  ON public.user_roles FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Admins can manage all roles"
-  ON public.user_roles FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid() AND role = 'admin'
-  ));
-
--- Security definer function for role checking
-CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role public.app_role)
-RETURNS BOOLEAN
-LANGUAGE SQL
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.user_roles
-    WHERE user_id = _user_id AND role = _role
-  )
-$$;
-
--- NGOs table
-CREATE TABLE public.ngos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+-- 🧱 ADMIN TABLE
+CREATE TABLE IF NOT EXISTS admins (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
-  description TEXT,
-  registration_doc_path TEXT,
-  address TEXT,
-  city TEXT,
-  state TEXT,
-  pincode TEXT,
-  lat NUMERIC,
-  lng NUMERIC,
-  active BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  approved_by UUID REFERENCES public.profiles(id),
-  approved_at TIMESTAMPTZ,
-  UNIQUE(profile_id)
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
-ALTER TABLE public.ngos ENABLE ROW LEVEL SECURITY;
+-- 💖 DONOR TABLE
+CREATE TABLE IF NOT EXISTS donors (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
--- NGO policies
-CREATE POLICY "Anyone can view active NGOs"
-  ON public.ngos FOR SELECT
-  USING (active = true OR profile_id = auth.uid());
+-- 🏢 NGO TABLE
+CREATE TABLE IF NOT EXISTS ngos (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-CREATE POLICY "NGO users can update their own NGO"
-  ON public.ngos FOR UPDATE
-  USING (profile_id = auth.uid());
+-- 🙋 VOLUNTEER TABLE
+CREATE TABLE IF NOT EXISTS volunteers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-CREATE POLICY "Users can insert their NGO registration"
-  ON public.ngos FOR INSERT
-  WITH CHECK (profile_id = auth.uid());
-
-CREATE POLICY "Admins can manage all NGOs"
-  ON public.ngos FOR ALL
-  USING (public.has_role(auth.uid(), 'admin'));
-
--- Donations table
-CREATE TABLE public.donations (
+CREATE TABLE donations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  donor_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  ngo_id UUID REFERENCES public.ngos(id) ON DELETE CASCADE,
-  category public.donation_category NOT NULL,
-  description TEXT,
+  donor_id UUID REFERENCES donors(id) ON DELETE CASCADE,
+  ngo_id UUID REFERENCES ngos(id) ON DELETE SET NULL,
+  category TEXT CHECK (category IN ('Books', 'Clothes', 'Food', 'Money', 'Electronics', 'Other')),
   amount NUMERIC,
-  pickup_address TEXT NOT NULL,
-  preferred_pickup_date TIMESTAMPTZ,
-  status public.donation_status DEFAULT 'Requested',
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE public.donations ENABLE ROW LEVEL SECURITY;
-
--- Donations policies
-CREATE POLICY "Donors can view their donations"
-  ON public.donations FOR SELECT
-  USING (donor_id = auth.uid());
-
-CREATE POLICY "NGOs can view donations for their organization"
-  ON public.donations FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM public.ngos
-    WHERE ngos.id = donations.ngo_id AND ngos.profile_id = auth.uid()
-  ));
-
-CREATE POLICY "Admins can view all donations"
-  ON public.donations FOR SELECT
-  USING (public.has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Donors can create donations"
-  ON public.donations FOR INSERT
-  WITH CHECK (donor_id = auth.uid());
-
-CREATE POLICY "Donors can update their donations"
-  ON public.donations FOR UPDATE
-  USING (donor_id = auth.uid());
-
-CREATE POLICY "NGOs can update donations for their organization"
-  ON public.donations FOR UPDATE
-  USING (EXISTS (
-    SELECT 1 FROM public.ngos
-    WHERE ngos.id = donations.ngo_id AND ngos.profile_id = auth.uid()
-  ));
-
--- Donation items table
-CREATE TABLE public.donation_items (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  donation_id UUID REFERENCES public.donations(id) ON DELETE CASCADE NOT NULL,
-  item_name TEXT NOT NULL,
-  quantity INTEGER NOT NULL CHECK (quantity > 0),
-  condition TEXT,
-  image_path TEXT
-);
-
-ALTER TABLE public.donation_items ENABLE ROW LEVEL SECURITY;
-
--- Donation items inherit permissions from donations
-CREATE POLICY "Users can view donation items if they can view the donation"
-  ON public.donation_items FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM public.donations
-    WHERE donations.id = donation_items.donation_id
-    AND (
-      donations.donor_id = auth.uid()
-      OR EXISTS (
-        SELECT 1 FROM public.ngos
-        WHERE ngos.id = donations.ngo_id AND ngos.profile_id = auth.uid()
-      )
-      OR public.has_role(auth.uid(), 'admin')
-    )
-  ));
-
-CREATE POLICY "Donors can insert items for their donations"
-  ON public.donation_items FOR INSERT
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM public.donations
-    WHERE donations.id = donation_items.donation_id
-    AND donations.donor_id = auth.uid()
-  ));
-
--- Volunteers table
-CREATE TABLE public.volunteers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  ngo_id UUID REFERENCES public.ngos(id) ON DELETE CASCADE NOT NULL,
-  phone TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(profile_id, ngo_id)
-);
-
-ALTER TABLE public.volunteers ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Volunteers can view their own data"
-  ON public.volunteers FOR SELECT
-  USING (profile_id = auth.uid());
-
-CREATE POLICY "NGOs can view their volunteers"
-  ON public.volunteers FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM public.ngos
-    WHERE ngos.id = volunteers.ngo_id AND ngos.profile_id = auth.uid()
-  ));
-
-CREATE POLICY "NGOs can manage their volunteers"
-  ON public.volunteers FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM public.ngos
-    WHERE ngos.id = volunteers.ngo_id AND ngos.profile_id = auth.uid()
-  ));
-
--- Pickups table
-CREATE TABLE public.pickups (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  donation_id UUID REFERENCES public.donations(id) ON DELETE CASCADE NOT NULL,
-  volunteer_id UUID REFERENCES public.volunteers(id) ON DELETE SET NULL,
-  scheduled_at TIMESTAMPTZ,
-  status public.pickup_status DEFAULT 'Assigned',
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE public.pickups ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Donors can view pickups for their donations"
-  ON public.pickups FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM public.donations
-    WHERE donations.id = pickups.donation_id
-    AND donations.donor_id = auth.uid()
-  ));
-
-CREATE POLICY "NGOs can manage pickups for their donations"
-  ON public.pickups FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM public.donations
-    JOIN public.ngos ON ngos.id = donations.ngo_id
-    WHERE donations.id = pickups.donation_id
-    AND ngos.profile_id = auth.uid()
-  ));
-
-CREATE POLICY "Volunteers can view and update their assigned pickups"
-  ON public.pickups FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM public.volunteers
-    WHERE volunteers.id = pickups.volunteer_id
-    AND volunteers.profile_id = auth.uid()
-  ));
-
-CREATE POLICY "Volunteers can update their pickup status"
-  ON public.pickups FOR UPDATE
-  USING (EXISTS (
-    SELECT 1 FROM public.volunteers
-    WHERE volunteers.id = pickups.volunteer_id
-    AND volunteers.profile_id = auth.uid()
-  ));
-
--- NGO posts table
-CREATE TABLE public.ngo_posts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  ngo_id UUID REFERENCES public.ngos(id) ON DELETE CASCADE NOT NULL,
-  title TEXT NOT NULL,
+  quantity INT,
   description TEXT,
-  category public.donation_category,
-  quantity_needed INTEGER,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  expires_at TIMESTAMPTZ
+  status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Accepted', 'Completed', 'Cancelled')),
+  created_at TIMESTAMP DEFAULT NOW()
 );
-
-ALTER TABLE public.ngo_posts ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can view NGO posts from active NGOs"
-  ON public.ngo_posts FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM public.ngos
-    WHERE ngos.id = ngo_posts.ngo_id AND ngos.active = true
-  ));
-
-CREATE POLICY "NGOs can manage their own posts"
-  ON public.ngo_posts FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM public.ngos
-    WHERE ngos.id = ngo_posts.ngo_id AND ngos.profile_id = auth.uid()
-  ));
-
--- Audit logs table
-CREATE TABLE public.audit_logs (
+CREATE TABLE favorite_ngos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  actor_id UUID REFERENCES public.profiles(id),
-  action TEXT NOT NULL,
-  target_table TEXT,
-  target_id UUID,
-  details JSONB,
-  created_at TIMESTAMPTZ DEFAULT now()
+  donor_id UUID REFERENCES donors(id) ON DELETE CASCADE,
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (donor_id, ngo_id)
+);
+CREATE TABLE donor_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  donor_id UUID REFERENCES donors(id) ON DELETE CASCADE,
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  message TEXT NOT NULL,
+  sender_role TEXT CHECK (sender_role IN ('donor', 'ngo')),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE donor_impact (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  donor_id UUID REFERENCES donors(id) ON DELETE CASCADE,
+  total_donations INT DEFAULT 0,
+  total_value NUMERIC DEFAULT 0,
+  ngos_helped INT DEFAULT 0,
+  donor_level TEXT DEFAULT 'Bronze' CHECK (donor_level IN ('Bronze', 'Silver', 'Gold')),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
-ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.donations
+  ADD COLUMN IF NOT EXISTS image_url TEXT;
 
-CREATE POLICY "Admins can view all audit logs"
-  ON public.audit_logs FOR SELECT
-  USING (public.has_role(auth.uid(), 'admin'));
+ALTER TABLE public.donations
+  ALTER COLUMN category SET DATA TYPE TEXT,
+  ALTER COLUMN category DROP DEFAULT;
 
-CREATE POLICY "System can insert audit logs"
-  ON public.audit_logs FOR INSERT
-  WITH CHECK (true);
+ALTER TABLE public.donations
+  DROP CONSTRAINT IF EXISTS donations_category_check;
 
--- Create storage buckets
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES 
-  ('ngo-documents', 'ngo-documents', false, 10485760, ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']),
-  ('donation-items', 'donation-items', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/jpg', 'image/webp']);
-
--- Storage policies for NGO documents
-CREATE POLICY "NGOs can upload their registration documents"
-  ON storage.objects FOR INSERT
-  WITH CHECK (
-    bucket_id = 'ngo-documents'
-    AND auth.uid()::text = (storage.foldername(name))[1]
+ALTER TABLE public.donations
+  ADD CONSTRAINT donations_category_check
+  CHECK (
+    category IN (
+      'Books','Clothes','Food','Money','Electronics','Toys','Stationery','Medical Supplies','Other'
+    )
   );
 
-CREATE POLICY "NGOs can view their own documents"
-  ON storage.objects FOR SELECT
-  USING (
-    bucket_id = 'ngo-documents'
-    AND auth.uid()::text = (storage.foldername(name))[1]
-  );
+  ALTER TABLE donors
+ADD COLUMN IF NOT EXISTS city TEXT,
+ADD COLUMN IF NOT EXISTS image_url TEXT;
 
-CREATE POLICY "Admins can view all NGO documents"
-  ON storage.objects FOR SELECT
-  USING (
-    bucket_id = 'ngo-documents'
-    AND public.has_role(auth.uid(), 'admin')
-  );
 
--- Storage policies for donation items
-CREATE POLICY "Authenticated users can upload donation item images"
-  ON storage.objects FOR INSERT
-  WITH CHECK (
-    bucket_id = 'donation-items'
-    AND auth.role() = 'authenticated'
-  );
+-- ✅ Update donations table
+ALTER TABLE donations
+ADD COLUMN IF NOT EXISTS ngo_feedback TEXT,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
 
-CREATE POLICY "Anyone can view donation item images"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'donation-items');
+ALTER TABLE donations
+DROP CONSTRAINT IF EXISTS donations_category_check;
 
--- Function to auto-create profile on user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+ALTER TABLE donations
+ADD CONSTRAINT donations_category_check
+CHECK (
+  category IN (
+    'Books',
+    'Clothes',
+    'Food',
+    'Money',
+    'Electronics',
+    'Toys',
+    'Stationery',
+    'Medical Supplies',
+    'Furniture',
+    'Groceries',
+    'Hygiene Kits',
+    'Other'
+  )
+);
+
+-- 🕓 Add timeline tracking table for history
+CREATE TABLE IF NOT EXISTS donation_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  donation_id UUID REFERENCES donations(id) ON DELETE CASCADE,
+  event TEXT NOT NULL,
+  note TEXT,
+  created_by UUID,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE donations
+ADD COLUMN IF NOT EXISTS donor_rating INT CHECK (donor_rating BETWEEN 1 AND 5);
+
+ALTER TABLE donor_impact
+ADD COLUMN avg_donation_value NUMERIC DEFAULT 0,
+ADD COLUMN recent_donation_date TIMESTAMP,
+ADD COLUMN top_category TEXT,
+ADD COLUMN progress_percent INT DEFAULT 0 CHECK (progress_percent BETWEEN 0 AND 100);
+
+
+CREATE TABLE ngo_impact (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  total_donations INT DEFAULT 0,
+  total_value NUMERIC DEFAULT 0,
+  total_donors INT DEFAULT 0,
+  total_volunteers INT DEFAULT 0,
+  active_campaigns INT DEFAULT 0,
+  top_category TEXT,
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE donations
+ADD COLUMN IF NOT EXISTS assigned_volunteer UUID REFERENCES volunteers(id) ON DELETE SET NULL,
+ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP,
+ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP;
+
+
+ALTER TABLE ngos
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS address TEXT,
+ADD COLUMN IF NOT EXISTS city TEXT,
+ADD COLUMN IF NOT EXISTS state TEXT,
+ADD COLUMN IF NOT EXISTS country TEXT,
+ADD COLUMN IF NOT EXISTS image_url TEXT,
+ADD COLUMN IF NOT EXISTS description TEXT,
+ADD COLUMN IF NOT EXISTS website TEXT,
+ADD COLUMN IF NOT EXISTS facebook TEXT,
+ADD COLUMN IF NOT EXISTS instagram TEXT,
+ADD COLUMN IF NOT EXISTS twitter TEXT,
+ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS rating NUMERIC CHECK (rating BETWEEN 0 AND 5),
+ADD COLUMN IF NOT EXISTS total_reviews INT DEFAULT 0;
+CREATE TABLE IF NOT EXISTS ngo_gallery (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  title TEXT,
+  media_url TEXT NOT NULL,
+  media_type TEXT CHECK (media_type IN ('image', 'video')) DEFAULT 'image',
+  description TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS ngo_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  donor_id UUID REFERENCES donors(id) ON DELETE CASCADE,
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  rating INT CHECK (rating BETWEEN 1 AND 5),
+  review TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS ngo_followers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  donor_id UUID REFERENCES donors(id) ON DELETE CASCADE,
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (donor_id, ngo_id)
+);
+CREATE TABLE IF NOT EXISTS ngo_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT,
+  image_url TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS volunteer_assignments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  donation_id UUID REFERENCES donations(id) ON DELETE CASCADE,
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'Assigned' CHECK (status IN ('Assigned', 'In Progress', 'Delivered', 'Cancelled')),
+  notes TEXT,
+  assigned_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS ngo_volunteer_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  message TEXT NOT NULL,
+  sender_role TEXT CHECK (sender_role IN ('ngo', 'volunteer')),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+ALTER TABLE ngo_impact
+ADD COLUMN IF NOT EXISTS monthly_growth_percent NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS donor_retention_rate NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS avg_donation_value NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS total_reviews INT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS rating NUMERIC DEFAULT 0 CHECK (rating BETWEEN 0 AND 5);
+
+
+
+CREATE TABLE IF NOT EXISTS volunteer_impact (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  total_tasks INT DEFAULT 0,
+  completed_tasks INT DEFAULT 0,
+  cancelled_tasks INT DEFAULT 0,
+  active_tasks INT DEFAULT 0,
+  ngos_helped INT DEFAULT 0,
+  performance_level TEXT DEFAULT 'Beginner' CHECK (performance_level IN ('Beginner','Active','Leader','Hero')),
+  last_active TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS volunteer_impact (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  total_tasks INT DEFAULT 0,
+  completed_tasks INT DEFAULT 0,
+  cancelled_tasks INT DEFAULT 0,
+  active_tasks INT DEFAULT 0,
+  ngos_helped INT DEFAULT 0,
+  performance_level TEXT DEFAULT 'Beginner' CHECK (
+    performance_level IN ('Beginner', 'Active', 'Leader', 'Hero')
+  ),
+  average_completion_time INTERVAL,
+  success_rate NUMERIC DEFAULT 0,
+  last_active TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS volunteer_activity (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  action TEXT NOT NULL,
+  details TEXT,
+  related_task UUID REFERENCES volunteer_assignments(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS ngo_volunteer_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  message TEXT NOT NULL,
+  sender_role TEXT CHECK (sender_role IN ('ngo', 'volunteer')),
+  read_status BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_volunteer_messages
+ON ngo_volunteer_messages (volunteer_id, ngo_id);
+ALTER TABLE volunteer_assignments
+ADD COLUMN IF NOT EXISTS completion_notes TEXT,
+ADD COLUMN IF NOT EXISTS completion_time TIMESTAMP,
+ADD COLUMN IF NOT EXISTS rating INT CHECK (rating BETWEEN 1 AND 5);
+CREATE OR REPLACE FUNCTION update_volunteer_impact()
+RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, role, full_name)
-  VALUES (
-    NEW.id,
-    COALESCE((NEW.raw_user_meta_data->>'role')::public.app_role, 'donor'),
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email)
-  );
-  
-  -- Also insert into user_roles table
-  INSERT INTO public.user_roles (user_id, role)
-  VALUES (
-    NEW.id,
-    COALESCE((NEW.raw_user_meta_data->>'role')::public.app_role, 'donor')
-  );
-  
+  -- Count totals
+  UPDATE volunteer_impact
+  SET
+    total_tasks = (SELECT COUNT(*) FROM volunteer_assignments WHERE volunteer_id = NEW.volunteer_id),
+    completed_tasks = (SELECT COUNT(*) FROM volunteer_assignments WHERE volunteer_id = NEW.volunteer_id AND status = 'Delivered'),
+    cancelled_tasks = (SELECT COUNT(*) FROM volunteer_assignments WHERE volunteer_id = NEW.volunteer_id AND status = 'Cancelled'),
+    active_tasks = (SELECT COUNT(*) FROM volunteer_assignments WHERE volunteer_id = NEW.volunteer_id AND status = 'In Progress'),
+    last_active = NOW(),
+    updated_at = NOW()
+  WHERE volunteer_id = NEW.volunteer_id;
+
   RETURN NEW;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
--- Trigger to create profile on signup
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+CREATE TRIGGER trg_update_volunteer_impact
+AFTER INSERT OR UPDATE OF status ON volunteer_assignments
+FOR EACH ROW
+EXECUTE FUNCTION update_volunteer_impact();
 
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-AS $$
+-- 🧩 Add NGO relationship to volunteers
+ALTER TABLE volunteers
+ADD COLUMN IF NOT EXISTS ngo_id UUID REFERENCES ngos(id) ON DELETE SET NULL,
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS city TEXT;
+
+CREATE TABLE IF NOT EXISTS ngo_volunteers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  joined_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (ngo_id, volunteer_id)
+);
+
+
+
+-- Add ngo_id and contact fields if missing
+ALTER TABLE volunteers
+ADD COLUMN IF NOT EXISTS ngo_id UUID REFERENCES ngos(id) ON DELETE SET NULL,
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS city TEXT;
+
+-- Optional: if you want volunteers to choose multiple NGOs
+CREATE TABLE IF NOT EXISTS ngo_volunteers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  joined_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (ngo_id, volunteer_id)
+);
+-- 1️⃣ Create the trigger function
+CREATE OR REPLACE FUNCTION log_volunteer_activity()
+RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at = now();
+  -- Insert activity when status changes
+  IF (TG_OP = 'UPDATE' AND NEW.status <> OLD.status) THEN
+    INSERT INTO volunteer_activity (volunteer_id, action, details, related_task, created_at)
+    VALUES (
+      NEW.volunteer_id,
+      CASE
+        WHEN NEW.status = 'Delivered' THEN 'Task Completed'
+        WHEN NEW.status = 'In Progress' THEN 'Task In Progress'
+        WHEN NEW.status = 'Cancelled' THEN 'Task Cancelled'
+        ELSE 'Task Updated'
+      END,
+      CONCAT('Task status changed from ', OLD.status, ' to ', NEW.status),
+      NEW.id,
+      NOW()
+    );
+  END IF;
+
   RETURN NEW;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
--- Triggers for updated_at
-CREATE TRIGGER update_donations_updated_at
-  BEFORE UPDATE ON public.donations
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+-- 2️⃣ Attach the trigger to volunteer_assignments
+DROP TRIGGER IF EXISTS trg_log_volunteer_activity ON volunteer_assignments;
 
-CREATE TRIGGER update_pickups_updated_at
-  BEFORE UPDATE ON public.pickups
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_log_volunteer_activity
+AFTER UPDATE OF status ON volunteer_assignments
+FOR EACH ROW
+EXECUTE FUNCTION log_volunteer_activity();
+
+INSERT INTO volunteer_activity (volunteer_id, action, details, related_task, created_at)
+SELECT
+  volunteer_id,
+  CASE
+    WHEN status = 'Delivered' THEN 'Task Completed'
+    WHEN status = 'In Progress' THEN 'Task In Progress'
+    WHEN status = 'Cancelled' THEN 'Task Cancelled'
+    ELSE 'Task Assigned'
+  END,
+  CONCAT('Existing task status: ', status),
+  id,
+  NOW()
+FROM volunteer_assignments;

@@ -29,6 +29,7 @@ const VolunteerDashboard = () => {
     completed_tasks: 0,
     active_tasks: 0,
     ngos_helped: 0,
+    success_rate: 0,
     performance_level: "Beginner",
   });
   const [recentTasks, setRecentTasks] = useState<any[]>([]);
@@ -37,59 +38,19 @@ const VolunteerDashboard = () => {
   const navigate = useNavigate();
   const volunteer = JSON.parse(localStorage.getItem("user") || "{}");
 
+  // ✅ Fetch Dashboard Data
   useEffect(() => {
     if (!volunteer.id) return;
     const fetchData = async () => {
       setLoading(true);
 
-      // 🧮 1️⃣ Get all volunteer tasks directly (reliable)
-      const { data: allTasks, error: taskErr } = await supabase
-        .from("volunteer_assignments")
-        .select("id, status, ngo_id")
-        .eq("volunteer_id", volunteer.id);
+      const { data: impactData } = await supabase
+        .from("volunteer_impact")
+        .select("*")
+        .eq("volunteer_id", volunteer.id)
+        .single();
+      if (impactData) setImpact(impactData);
 
-      if (taskErr) console.error(taskErr);
-
-      const total_tasks = allTasks?.length || 0;
-      const completed_tasks =
-        allTasks?.filter((t) => t.status === "Delivered").length || 0;
-      const active_tasks =
-        allTasks?.filter((t) => t.status === "In Progress" || t.status === "Assigned").length || 0;
-
-      const ngos_helped = new Set(
-        allTasks?.map((t) => t.ngo_id).filter(Boolean)
-      ).size;
-
-      // 🏅 Calculate volunteer performance level
-      let performance_level = "Beginner";
-      if (completed_tasks >= 10) performance_level = "Active";
-      if (completed_tasks >= 25) performance_level = "Leader";
-      if (completed_tasks >= 50) performance_level = "Hero";
-
-      // 💾 2️⃣ Upsert into volunteer_impact (for sync with trigger)
-      await supabase.from("volunteer_impact").upsert(
-        {
-          volunteer_id: volunteer.id,
-          total_tasks,
-          completed_tasks,
-          active_tasks,
-          ngos_helped,
-          performance_level,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "volunteer_id" }
-      );
-
-      // 🧩 Set to state for dashboard display
-      setImpact({
-        total_tasks,
-        completed_tasks,
-        active_tasks,
-        ngos_helped,
-        performance_level,
-      });
-
-      // 📋 3️⃣ Fetch recent 5 tasks
       const { data: tasks } = await supabase
         .from("volunteer_assignments")
         .select(`
@@ -102,7 +63,6 @@ const VolunteerDashboard = () => {
         .limit(5);
       if (tasks) setRecentTasks(tasks);
 
-      // 🔄 4️⃣ Fetch recent volunteer activity
       const { data: actions } = await supabase
         .from("volunteer_activity")
         .select("action, details, created_at")
@@ -113,7 +73,6 @@ const VolunteerDashboard = () => {
 
       setLoading(false);
     };
-
     fetchData();
   }, [volunteer.id]);
 
@@ -146,7 +105,7 @@ const VolunteerDashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar (unchanged) */}
+      {/* 🧭 Sidebar */}
       <aside className="w-64 bg-white shadow-xl p-6 border-r border-gray-200 hidden md:flex flex-col justify-between">
         <div>
           <h2 className="text-2xl font-extrabold text-blue-700 mb-8">
@@ -182,8 +141,9 @@ const VolunteerDashboard = () => {
         </button>
       </aside>
 
-      {/* Main Content (unchanged layout) */}
+      {/* 🌟 Main Content */}
       <main className="flex-1 p-8">
+        {/* Header */}
         <div className="flex justify-between items-center mb-10">
           <div>
             <h1 className="text-3xl font-bold text-blue-700">
@@ -201,20 +161,48 @@ const VolunteerDashboard = () => {
           </Link>
         </div>
 
-        {/* Stats Section */}
+        {/* 📊 Stats Section */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <StatCard title="Total Tasks" value={impact.total_tasks} color="blue" icon={ClipboardList} />
-          <StatCard title="Completed Tasks" value={impact.completed_tasks} color="green" icon={CheckCircle} trend="up" />
-          <StatCard title="Active Tasks" value={impact.active_tasks} color="yellow" icon={BarChart3} />
-          <StatCard title="NGOs Helped" value={impact.ngos_helped} color="purple" icon={Users} />
+          <StatCard
+            title="Total Tasks"
+            value={impact.total_tasks}
+            color="blue"
+            icon={ClipboardList}
+          />
+          <StatCard
+            title="Completed Tasks"
+            value={impact.completed_tasks}
+            color="green"
+            icon={CheckCircle}
+            trend="up"
+          />
+          <StatCard
+            title="Active Tasks"
+            value={impact.active_tasks}
+            color="yellow"
+            icon={BarChart3}
+          />
+          <StatCard
+            title="NGOs Helped"
+            value={impact.ngos_helped}
+            color="purple"
+            icon={Users}
+          />
         </div>
 
-        {/* Progress Chart + Performance */}
+        {/* 🧭 Progress Chart + Level */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-10 flex flex-col md:flex-row items-center justify-around">
           <div className="w-72 h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={100} label>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={70}
+                  outerRadius={100}
+                  label
+                >
                   {chartData.map((_, index) => (
                     <Cell key={index} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -224,20 +212,26 @@ const VolunteerDashboard = () => {
             </ResponsiveContainer>
           </div>
           <div className="text-center md:text-left">
-            <h3 className="text-2xl font-bold text-blue-700 mb-2">Performance Overview</h3>
+            <h3 className="text-2xl font-bold text-blue-700 mb-2">
+              Performance Overview
+            </h3>
             <p className="text-gray-600 mb-2">
               Completion Rate:{" "}
-              <span className="font-semibold text-green-600">{progressPercent}%</span>
+              <span className="font-semibold text-green-600">
+                {progressPercent}%
+              </span>
             </p>
             <p className="text-gray-600">
               Current Level:{" "}
-              <span className="font-semibold text-blue-600">{impact.performance_level}</span>
+              <span className="font-semibold text-blue-600">
+                {impact.performance_level}
+              </span>
             </p>
             <Smile size={28} className="mt-3 mx-auto md:mx-0 text-blue-500" />
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* 🕒 Recent Activity Section */}
         <div className="bg-white p-6 rounded-xl shadow-lg border border-blue-100 mb-10">
           <h2 className="text-xl font-bold text-blue-700 mb-4 flex items-center gap-2">
             <Activity size={20} /> Recent Volunteer Activity
@@ -258,7 +252,7 @@ const VolunteerDashboard = () => {
           )}
         </div>
 
-        {/* Recent Tasks */}
+        {/* 🗂️ Recent Tasks Section */}
         <div className="bg-white p-6 rounded-xl shadow-lg border border-blue-100">
           <h2 className="text-xl font-bold text-blue-700 mb-4 flex items-center gap-2">
             <ClipboardList size={20} /> Recent Assignments
@@ -278,7 +272,7 @@ const VolunteerDashboard = () => {
   );
 };
 
-// 💠 Reuse your StatCard and TaskCard as-is
+// 🧩 Components
 const StatCard = ({ title, value, color, icon: Icon, trend }: any) => {
   const colorMap: any = {
     blue: "border-blue-600 text-blue-700",

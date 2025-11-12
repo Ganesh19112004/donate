@@ -1,83 +1,41 @@
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps {
+  allowedRoles: string[];
   children: React.ReactNode;
-  allowedRoles?: string[];
 }
 
-export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const [loading, setLoading] = useState(true);
-  const [authorized, setAuthorized] = useState(false);
-  const { toast } = useToast();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles, children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
+    const user = localStorage.getItem("user");
+    const role = localStorage.getItem("role");
 
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.user) {
-        setAuthorized(false);
-        setLoading(false);
-        return;
+    // Small delay to ensure values are loaded even after refresh
+    const timer = setTimeout(() => {
+      if (!user || !role) {
+        setIsAuthenticated(false);
+      } else if (!allowedRoles.includes(role)) {
+        setIsAuthenticated(false);
+      } else {
+        setIsAuthenticated(true);
       }
+    }, 200); // Wait 200ms to prevent early redirect on fast refresh
 
-      if (!allowedRoles || allowedRoles.length === 0) {
-        setAuthorized(true);
-        setLoading(false);
-        return;
-      }
-
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
-
-      if (error) console.error("Role fetch error:", error);
-
-      if (isMounted) {
-        const hasAccess = !!profile && allowedRoles.includes(profile.role);
-        setAuthorized(hasAccess);
-        setLoading(false);
-
-        if (!hasAccess) {
-          toast({
-            variant: "destructive",
-            title: "Access Denied",
-            description: "You are not authorized to access this page.",
-          });
-        }
-      }
-    };
-
-    checkAuth();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      checkAuth();
-    });
-
-    return () => {
-      isMounted = false;
-      listener?.subscription.unsubscribe();
-    };
+    return () => clearTimeout(timer);
   }, [allowedRoles]);
 
-  if (loading) {
+  if (isAuthenticated === null) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-muted/30">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-screen text-blue-600 font-semibold">
+        Loading your session...
       </div>
     );
   }
 
-  if (!authorized) {
-    return <Navigate to="/auth" replace />;
-  }
+  return isAuthenticated ? <>{children}</> : <Navigate to="/auth" replace />;
+};
 
-  return <>{children}</>;
-}
+export default ProtectedRoute;

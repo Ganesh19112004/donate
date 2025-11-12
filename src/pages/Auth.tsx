@@ -1,461 +1,218 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Loader2, Home } from "lucide-react";
 
 const Auth = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const [role, setRole] = useState("donor");
+  const [isSignup, setIsSignup] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
-  const [session, setSession] = useState<any>(null);
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
 
-  const initialMode = searchParams.get("mode") || "donor";
-
-  // Login states
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [loginAsAdmin, setLoginAsAdmin] = useState(false);
-
-  // Signup states
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState(initialMode);
-  const [phone, setPhone] = useState("");
-
-  // NGO-specific
-  const [ngoName, setNgoName] = useState("");
-  const [ngoDescription, setNgoDescription] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [pincode, setPincode] = useState("");
-  const [documents, setDocuments] = useState<FileList | null>(null);
-
-  // Admin-specific
-  const [adminDepartment, setAdminDepartment] = useState("");
-  const [adminReason, setAdminReason] = useState("");
-
-  // ---------------- SESSION MANAGEMENT ----------------
+  // 🔹 Auto-redirect if already logged in
   useEffect(() => {
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setCheckingSession(false);
-
-      if (session) await handleRedirect(session.user.id);
-    };
-
-    initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) handleRedirect(session.user.id);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // ---------------- ROLE-BASED REDIRECT ----------------
-  const handleRedirect = async (userId: string) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
-
-      if (error) return console.error("Error fetching role:", error);
-      if (!profile?.role) return;
-
-      const routes: Record<string, string> = {
-        admin: "/admin",
-        ngo: "/ngo/dashboard",
-        donor: "/donor/dashboard",
-        volunteer: "/volunteer/dashboard",
-      };
-
-      navigate(routes[profile.role] || "/");
-    } catch (err) {
-      console.error("Redirect error:", err);
+    const storedUser = localStorage.getItem("user");
+    const storedRole = localStorage.getItem("role");
+    if (storedUser && storedRole) {
+      navigate(`/${storedRole}/dashboard`);
     }
-  };
+  }, [navigate]);
 
-  // ---------------- LOGIN ----------------
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  // 🔹 Sign Up / Sign In Handler
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail.trim().toLowerCase(),
-        password: loginPassword,
-      });
-      if (error) throw error;
-
-      if (data?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", data.user.id)
-          .single();
-
-        if (loginAsAdmin && profile?.role !== "admin") {
-          toast({
-            variant: "destructive",
-            title: "Access denied",
-            description: "This account is not an admin account.",
-          });
-          await supabase.auth.signOut();
-          return;
-        }
-
-        toast({
-          title: "Welcome back!",
-          description: "Redirecting to your dashboard...",
-        });
-        await handleRedirect(data.user.id);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error.message || "Invalid credentials.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ---------------- GOOGLE LOGIN ----------------
-  const handleGoogleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-        },
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In failed",
-        description: error.message,
-      });
-    }
-  };
-
-  // ---------------- SIGNUP ----------------
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    const table = `${role}s`; // admins, donors, ngos, volunteers
 
     try {
-      if (!signupEmail || !signupPassword || !fullName) {
-        throw new Error("Please fill all required fields.");
-      }
+      if (isSignup) {
+        // 🧾 Check existing email
+        const { data: existingUser } = await supabase
+          .from(table)
+          .select("email")
+          .eq("email", formData.email.trim().toLowerCase())
+          .maybeSingle();
 
-      const { data, error } = await supabase.auth.signUp({
-        email: signupEmail.trim().toLowerCase(),
-        password: signupPassword,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
-          data: { full_name: fullName, role },
-        },
-      });
+        if (existingUser) throw new Error("User already exists with this email.");
 
-      if (error) throw error;
-      if (!data.user) throw new Error("Signup failed. Please try again.");
-
-      const userId = data.user.id;
-
-      await supabase.from("profiles").upsert({
-        id: userId,
-        full_name: fullName,
-        phone,
-        role,
-        created_at: new Date(),
-      });
-
-      if (role === "ngo") {
-        const { data: ngoData, error: ngoError } = await supabase
-          .from("ngos")
+        // 🆕 Insert new user
+        const { data, error } = await supabase
+          .from(table)
           .insert({
-            profile_id: userId,
-            name: ngoName,
-            description: ngoDescription,
-            address,
-            city,
-            state,
-            pincode,
-            active: false,
+            name: formData.name.trim(),
+            email: formData.email.trim().toLowerCase(),
+            password: formData.password,
+            created_at: new Date(),
           })
           .select()
           .single();
 
-        if (ngoError) throw ngoError;
+        if (error) throw error;
 
-        if (documents && documents.length > 0) {
-          const file = documents[0];
-          const filePath = `${userId}/registration.${file.name.split(".").pop()}`;
-          const { error: uploadError } = await supabase.storage
-            .from("ngo-documents")
-            .upload(filePath, file);
-          if (uploadError) throw uploadError;
+        alert(`🎉 ${role.toUpperCase()} registered successfully! Please sign in.`);
+        setIsSignup(false);
+        setFormData({ name: "", email: "", password: "" });
+      } else {
+        // 🔑 Login existing user
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq("email", formData.email.trim().toLowerCase())
+          .eq("password", formData.password)
+          .maybeSingle();
 
-          await supabase
-            .from("ngos")
-            .update({ registration_doc_path: filePath })
-            .eq("id", ngoData.id);
-        }
+        if (error || !data) throw new Error("Invalid credentials! Please try again.");
 
-        toast({
-          title: "NGO registration submitted",
-          description: "Your application is pending admin approval.",
-        });
+        // 🧠 Save user & role in localStorage
+        // 🧠 Save user & role persistently
+localStorage.setItem("user", JSON.stringify(data));
+localStorage.setItem("role", role);
+localStorage.setItem("loginTime", new Date().toISOString());
+
+        // 🚀 Redirect based on role
+        const dashboardPath = `/${role}/dashboard`;
+        alert(`✅ Welcome back, ${data.name}! Redirecting to your ${role} dashboard...`);
+        navigate(dashboardPath);
       }
-
-      if (role === "admin") {
-        await supabase.from("pending_admins").insert({
-          profile_id: userId,
-          department: adminDepartment,
-          reason: adminReason,
-          status: "pending",
-        });
-        toast({
-          title: "Admin access requested",
-          description: "Your request is pending approval.",
-        });
-      }
-
-      if (role === "donor" || role === "volunteer") {
-        toast({
-          title: "Signup successful",
-          description: "Redirecting to your dashboard...",
-        });
-        await handleRedirect(userId);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Signup failed",
-        description: error.message || "Please try again.",
-      });
+    } catch (err: any) {
+      alert(err.message || "Authentication failed!");
     } finally {
       setLoading(false);
     }
   };
 
-  // ---------------- UI ----------------
-  if (checkingSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Redirecting...</CardTitle>
-            <CardDescription>Loading your dashboard...</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // ---------------- MAIN AUTH UI ----------------
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-2xl shadow-elevated">
-        <CardHeader>
-          <CardTitle className="text-3xl text-center text-primary">Welcome to DonateConnect</CardTitle>
-          <CardDescription className="text-center text-muted-foreground">
-            Join our community of donors, NGOs, volunteers, and admins.
-          </CardDescription>
-        </CardHeader>
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6">
+      {/* Header Section */}
+      <div className="w-full max-w-md mb-6 flex justify-between items-center">
+        <h1 className="text-3xl font-extrabold text-blue-700 tracking-tight">DenaSetu</h1>
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition"
+        >
+          <Home className="w-5 h-5" /> Home
+        </Link>
+      </div>
 
-        <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
+      {/* Auth Card */}
+      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 border border-blue-100">
+        <h2 className="text-2xl font-bold text-center text-blue-700 mb-2">
+          {isSignup ? "Create Account" : "Welcome Back!"}
+        </h2>
+        <p className="text-center text-gray-600 mb-6">
+          {isSignup
+            ? "Join us and make a difference in the world."
+            : "Sign in to continue your contribution."}
+        </p>
 
-            {/* LOGIN */}
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  required
-                />
-                <Label>Password</Label>
-                <Input
-                  type="password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required
-                />
+        {/* Role Selector */}
+        <div className="flex justify-between mb-6 bg-blue-50 p-1 rounded-xl shadow-inner">
+          {["admin", "donor", "ngo", "volunteer"].map((r) => (
+            <button
+              key={r}
+              onClick={() => setRole(r)}
+              className={`w-1/4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                role === r
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-blue-600 hover:bg-blue-100"
+              }`}
+            >
+              {r.toUpperCase()}
+            </button>
+          ))}
+        </div>
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="loginAsAdmin"
-                    checked={loginAsAdmin}
-                    onChange={(e) => setLoginAsAdmin(e.target.checked)}
-                  />
-                  <Label htmlFor="loginAsAdmin" className="cursor-pointer">
-                    Login as Admin
-                  </Label>
-                </div>
+        {/* Auth Form */}
+        <form onSubmit={handleAuth} className="space-y-4">
+          {isSignup && (
+            <div>
+              <label className="block text-gray-700 font-medium mb-1">Full Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400"
+                required
+              />
+            </div>
+          )}
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Login"}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full mt-3 flex items-center justify-center gap-2"
-                  onClick={handleGoogleLogin}
-                >
-                  <img
-                    src="https://www.svgrepo.com/show/475656/google-color.svg"
-                    alt="Google"
-                    className="w-5 h-5"
-                  />
-                  Continue with Google
-                </Button>
-              </form>
-            </TabsContent>
-
-            {/* SIGNUP */}
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <Label>I am a</Label>
-                <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="donor">Donor</SelectItem>
-                    <SelectItem value="ngo">NGO</SelectItem>
-                    <SelectItem value="volunteer">Volunteer</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Label>Full Name</Label>
-                <Input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-
-                <Label>Phone</Label>
-                <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-
-                <Label>Email</Label>
-                <Input type="email" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} required />
-
-                <Label>Password</Label>
-                <Input type="password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required />
-
-                {role === "ngo" && (
-                  <>
-                    <Label>Organization Name</Label>
-                    <Input value={ngoName} onChange={(e) => setNgoName(e.target.value)} required />
-
-                    <Label>Description</Label>
-                    <Textarea value={ngoDescription} onChange={(e) => setNgoDescription(e.target.value)} />
-
-                    <Label>Address</Label>
-                    <Input value={address} onChange={(e) => setAddress(e.target.value)} required />
-
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <Input placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} required />
-                      <Input placeholder="State" value={state} onChange={(e) => setState(e.target.value)} required />
-                      <Input placeholder="Pincode" value={pincode} onChange={(e) => setPincode(e.target.value)} required />
-                    </div>
-
-                    <Label>Upload Registration Document</Label>
-                    <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setDocuments(e.target.files)} />
-                  </>
-                )}
-
-                {role === "admin" && (
-                  <>
-                    <Label>Department</Label>
-                    <Input value={adminDepartment} onChange={(e) => setAdminDepartment(e.target.value)} />
-
-                    <Label>Reason for Access</Label>
-                    <Textarea value={adminReason} onChange={(e) => setAdminReason(e.target.value)} required />
-                  </>
-                )}
-
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full mt-3 flex items-center justify-center gap-2"
-                  onClick={handleGoogleLogin}
-                >
-                  <img
-                    src="https://www.svgrepo.com/show/475656/google-color.svg"
-                    alt="Google"
-                    className="w-5 h-5"
-                  />
-                  Continue with Google
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-
-          <div className="mt-6 text-center">
-            <Link to="/" className="text-sm text-primary hover:underline">
-              Back to Home
-            </Link>
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="you@example.com"
+              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400"
+              required
+            />
           </div>
-        </CardContent>
-      </Card>
+
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold transition-all mt-4"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="animate-spin h-5 w-5" /> Processing...
+              </span>
+            ) : isSignup ? (
+              "Sign Up"
+            ) : (
+              "Sign In"
+            )}
+          </button>
+
+          {/* Switch Auth Mode */}
+          <p className="text-center text-sm text-gray-600 mt-4">
+            {isSignup ? (
+              <>
+                Already have an account?{" "}
+                <span
+                  onClick={() => setIsSignup(false)}
+                  className="text-blue-600 hover:underline cursor-pointer"
+                >
+                  Sign In
+                </span>
+              </>
+            ) : (
+              <>
+                New here?{" "}
+                <span
+                  onClick={() => setIsSignup(true)}
+                  className="text-blue-600 hover:underline cursor-pointer"
+                >
+                  Create Account
+                </span>
+              </>
+            )}
+          </p>
+        </form>
+      </div>
     </div>
   );
 };

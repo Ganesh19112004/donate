@@ -1,79 +1,78 @@
-import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   PlusCircle,
   History,
-  User,
   LogOut,
   Gift,
   BarChart,
   Settings,
   Building2,
-  MessageCircle,
-  Bell,
   Heart,
   Award,
-  TrendingUp,
+  User,
+  MessageSquare,
+  LineChart,
 } from "lucide-react";
 
 const DonorDashboard = () => {
   const [donations, setDonations] = useState<any[]>([]);
   const [donor, setDonor] = useState<any>(null);
-  const [stats, setStats] = useState({ total: 0, totalValue: 0, ngos: 0 });
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    total: 0,
+    totalValue: 0,
+    ngos: 0,
+    level: "Bronze",
+  });
+  const navigate = useNavigate();
 
+  // ✅ Only localStorage-based auth
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const storedRole = localStorage.getItem("role");
 
     if (!storedUser || storedRole !== "donor") {
-      alert("You must be logged in as a donor.");
-      window.location.href = "/auth";
+      navigate("/auth");
       return;
     }
 
-    const user = JSON.parse(storedUser);
-    setDonor(user);
+    const donorData = JSON.parse(storedUser);
+    setDonor(donorData);
 
-    const fetchDashboard = async () => {
-      setLoading(true);
+    const loadDonations = async () => {
       try {
-        // Fetch donations
         const { data, error } = await supabase
           .from("donations")
-          .select("*, ngos(name)")
-          .eq("donor_id", user.id)
+          .select("id, category, amount, quantity, status, description, ngo_id, ngos(name)")
+          .eq("donor_id", donorData.id)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
+
         setDonations(data || []);
 
-        // Compute quick stats
-        const totalValue = data
-          ?.filter((d: any) => d.amount)
-          .reduce((sum: number, d: any) => sum + Number(d.amount || 0), 0);
+        // Calculate stats
+        const totalValue = (data || []).reduce(
+          (sum, d) => sum + (Number(d.amount) || 0),
+          0
+        );
+        const ngoCount = new Set((data || []).map((d) => d.ngo_id)).size;
+        const total = data?.length || 0;
+        const level = total > 15 ? "Gold" : total > 5 ? "Silver" : "Bronze";
 
-        const ngoCount = new Set(data?.map((d: any) => d.ngo_id)).size;
-
-        setStats({
-          total: data?.length || 0,
-          totalValue: totalValue || 0,
-          ngos: ngoCount || 0,
-        });
+        setStats({ total, totalValue, ngos: ngoCount, level });
       } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching donations:", err);
       }
     };
 
-    fetchDashboard();
-  }, []);
+    loadDonations();
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/auth";
+    navigate("/auth");
   };
 
   return (
@@ -82,7 +81,6 @@ const DonorDashboard = () => {
       <aside className="w-64 bg-white border-r border-gray-200 p-6 hidden md:flex flex-col justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-blue-700 mb-8">DenaSetu</h1>
-
           <nav className="space-y-3">
             <Link
               to="/donor/dashboard"
@@ -90,63 +88,48 @@ const DonorDashboard = () => {
             >
               <BarChart size={20} /> Dashboard
             </Link>
-
+            <Link
+              to="/donor/profile"
+              className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
+            >
+              <User size={20} /> Profile
+            </Link>
             <Link
               to="/donor/create-donation"
               className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
             >
               <PlusCircle size={20} /> Create Donation
             </Link>
-
             <Link
               to="/donor/history"
               className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
             >
               <History size={20} /> Donation History
             </Link>
-
             <Link
               to="/donor/favorites"
               className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
             >
               <Heart size={20} /> Favorites
             </Link>
-
             <Link
-              to="/donor/view-ngos"
+              to="/donor/impact"
               className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
             >
-              <Building2 size={20} /> Explore NGOs
+              <LineChart size={20} /> My Impact
             </Link>
-
-            <Link
-              to="/donor/my-impact"
-              className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
-            >
-              <TrendingUp size={20} /> My Impact
-            </Link>
-
             <Link
               to="/donor/messages"
               className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
             >
-              <MessageCircle size={20} /> Messages
+              <MessageSquare size={20} /> Message Center
             </Link>
-
             <Link
-              to="/donor/notifications"
+              to="/donor/view-ngos"
               className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
             >
-              <Bell size={20} /> Notifications
+              <Building2 size={20} /> View NGOs
             </Link>
-
-            <Link
-              to="/donor/profile"
-              className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
-            >
-              <User size={20} /> My Profile
-            </Link>
-
             <Link
               to="/donor/settings"
               className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-3 rounded-lg"
@@ -158,24 +141,24 @@ const DonorDashboard = () => {
 
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 text-red-600 font-semibold hover:text-red-700 p-3 rounded-lg transition-all"
+          className="flex items-center gap-3 text-red-600 font-semibold hover:text-red-700 p-3 rounded-lg"
         >
           <LogOut size={20} /> Logout
         </button>
       </aside>
 
-      {/* Main Dashboard */}
+      {/* Main Section */}
       <main className="flex-1 p-8">
+        {/* Header */}
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-blue-700">
               Welcome, {donor?.name || "Donor"} 👋
             </h1>
             <p className="text-gray-600">
-              Here’s a snapshot of your donation journey and contributions.
+              Here’s your donation summary and activity overview.
             </p>
           </div>
-
           <Link
             to="/donor/create-donation"
             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
@@ -184,52 +167,34 @@ const DonorDashboard = () => {
           </Link>
         </header>
 
-        {/* Stats Section */}
+        {/* Stats Cards */}
         <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <div className="bg-white shadow-md border border-gray-200 rounded-xl p-6 text-center">
             <Gift className="mx-auto text-blue-600 mb-3" size={32} />
             <h2 className="text-2xl font-bold text-blue-700">{stats.total}</h2>
             <p className="text-gray-600">Total Donations</p>
           </div>
-
           <div className="bg-white shadow-md border border-gray-200 rounded-xl p-6 text-center">
             <BarChart className="mx-auto text-green-600 mb-3" size={32} />
-            <h2 className="text-2xl font-bold text-green-700">
-              ₹{stats.totalValue}
-            </h2>
+            <h2 className="text-2xl font-bold text-green-700">₹{stats.totalValue}</h2>
             <p className="text-gray-600">Total Value Donated</p>
           </div>
-
           <div className="bg-white shadow-md border border-gray-200 rounded-xl p-6 text-center">
             <Building2 className="mx-auto text-purple-600 mb-3" size={32} />
-            <h2 className="text-2xl font-bold text-purple-700">
-              {stats.ngos}
-            </h2>
+            <h2 className="text-2xl font-bold text-purple-700">{stats.ngos}</h2>
             <p className="text-gray-600">NGOs Helped</p>
           </div>
-
           <div className="bg-white shadow-md border border-gray-200 rounded-xl p-6 text-center">
             <Award className="mx-auto text-amber-500 mb-3" size={32} />
-            <h2 className="text-2xl font-bold text-amber-600">
-              {stats.total > 15
-                ? "Gold"
-                : stats.total > 5
-                ? "Silver"
-                : "Bronze"}
-            </h2>
+            <h2 className="text-2xl font-bold text-amber-600">{stats.level}</h2>
             <p className="text-gray-600">Donor Level</p>
           </div>
         </section>
 
-        {/* Recent Donations Table */}
+        {/* Recent Donations */}
         <section>
-          <h2 className="text-2xl font-semibold text-blue-700 mb-4">
-            Recent Donations
-          </h2>
-
-          {loading ? (
-            <p className="text-gray-500">Loading your donations...</p>
-          ) : donations.length > 0 ? (
+          <h2 className="text-2xl font-semibold text-blue-700 mb-4">Recent Donations</h2>
+          {donations.length > 0 ? (
             <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
               <table className="w-full border-collapse">
                 <thead className="bg-blue-50">
@@ -237,22 +202,18 @@ const DonorDashboard = () => {
                     <th className="p-4 text-left text-gray-700">NGO</th>
                     <th className="p-4 text-left text-gray-700">Category</th>
                     <th className="p-4 text-left text-gray-700">Description</th>
-                    <th className="p-4 text-left text-gray-700">
-                      Quantity / Amount
-                    </th>
+                    <th className="p-4 text-left text-gray-700">Amount / Qty</th>
                     <th className="p-4 text-left text-gray-700">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {donations.slice(0, 5).map((d: any) => (
+                  {donations.slice(0, 5).map((d) => (
                     <tr key={d.id} className="border-t hover:bg-gray-50">
                       <td className="p-4">{d.ngos?.name || "—"}</td>
                       <td className="p-4">{d.category}</td>
                       <td className="p-4 truncate max-w-xs">{d.description}</td>
                       <td className="p-4">
-                        {d.category === "Money"
-                          ? `₹${d.amount}`
-                          : d.quantity}
+                        {d.category === "Money" ? `₹${d.amount}` : d.quantity}
                       </td>
                       <td className="p-4">
                         <span
@@ -273,22 +234,11 @@ const DonorDashboard = () => {
                   ))}
                 </tbody>
               </table>
-              <div className="p-4 text-right">
-                <Link
-                  to="/donor/history"
-                  className="text-blue-600 hover:underline text-sm font-medium"
-                >
-                  View All →
-                </Link>
-              </div>
             </div>
           ) : (
-            <p className="text-gray-600 text-center py-6">
+            <p className="text-center text-gray-600">
               You haven’t made any donations yet.{" "}
-              <Link
-                to="/donor/create-donation"
-                className="text-blue-600 underline"
-              >
+              <Link to="/donor/create-donation" className="text-blue-600 underline">
                 Create one now!
               </Link>
             </p>
