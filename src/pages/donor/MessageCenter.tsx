@@ -1,206 +1,337 @@
 import { useEffect, useState, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Send, ArrowLeft, MessageCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  MessageCircle,
+  Send,
+  Check,
+  CheckCheck,
+  Search,
+} from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
+import {
+  getChatMessages,
+  sendMessage,
+  subscribeToMessages,
+  getUserChatList,
+  markMessagesAsRead,
+  sendTypingStatus,
+  subscribeToTyping,
+} from "@/utils/messageService";
+
+import { supabase } from "@/integrations/supabase/client";
 
 const MessageCenter = () => {
+  const donor = JSON.parse(localStorage.getItem("user") || "{}");
+
   const [ngos, setNgos] = useState<any[]>([]);
+  const [filteredNgos, setFilteredNgos] = useState<any[]>([]);
   const [selectedNgo, setSelectedNgo] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMsg, setNewMsg] = useState("");
-  const [loading, setLoading] = useState(false);
-  const donor = JSON.parse(localStorage.getItem("user") || "{}");
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [typing, setTyping] = useState(false);
+  const [ngoTyping, setNgoTyping] = useState(false);
 
-  // 🔹 Load NGOs that donor has interacted with OR all NGOs (for now)
+  const navigate = useNavigate();
+  const endRef = useRef<HTMLDivElement | null>(null);
+  let typingTimeout: any = null;
+
+  /* ---------------------------------------------------------
+     LOAD CHAT LIST (All NGOs donor has chatted with)
+  ----------------------------------------------------------*/
   useEffect(() => {
-    const loadNgos = async () => {
-      const { data, error } = await supabase
+    const loadChatList = async () => {
+      const chatList = await getUserChatList(donor.id);
+
+      const ngoIds = chatList.map((m) =>
+        m.sender_id === donor.id ? m.receiver_id : m.sender_id
+      );
+
+      if (ngoIds.length === 0) return;
+
+      const { data: ngoDetails } = await supabase
         .from("ngos")
-        .select("id, name, email");
-      if (error) console.error(error);
-      else setNgos(data || []);
+        .select("id,name,email,image_url")
+        .in("id", ngoIds);
+
+      const merged = ngoDetails.map((ngo) => {
+        const lastMsg = chatList.find(
+          (m) => m.sender_id === ngo.id || m.receiver_id === ngo.id
+        );
+
+        return {
+          ...ngo,
+          last_message: lastMsg?.message || "",
+          last_time: lastMsg?.created_at || "",
+          unread: lastMsg?.receiver_id === donor.id && !lastMsg.read_status,
+        };
+      });
+
+      setNgos(merged);
+      setFilteredNgos(merged);
     };
-    loadNgos();
+
+    loadChatList();
   }, []);
 
-  // 🔹 Load messages for selected NGO
+  /* ---------------------------------------------------------
+     LOAD MESSAGES WHEN NGO SELECTED
+  ----------------------------------------------------------*/
   useEffect(() => {
     if (!selectedNgo) return;
 
-    const loadMessages = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("donor_messages")
-        .select("*")
-        .eq("donor_id", donor.id)
-        .eq("ngo_id", selectedNgo.id)
-        .order("created_at", { ascending: true });
+    const loadMessagesNow = async () => {
+      const { data } = await getChatMessages(donor.id, selectedNgo.id);
+      setMessages(data || []);
+      scrollBottom();
 
-      if (error) console.error(error);
-      else setMessages(data || []);
-      setLoading(false);
+      await markMessagesAsRead(donor.id, selectedNgo.id);
     };
 
-    loadMessages();
+    loadMessagesNow();
 
-    // 🔹 Real-time subscription for new messages
-    const channel = supabase
-      .channel("realtime-donor-messages")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "donor_messages" },
-        (payload) => {
-          if (
-            payload.new &&
-            payload.new.donor_id === donor.id &&
-            payload.new.ngo_id === selectedNgo.id
-          ) {
-            setMessages((prev) => [...prev, payload.new]);
-          }
+    /* ------- REAL TIME MESSAGE LISTENER ------- */
+    const channel = subscribeToMessages(
+      donor.id,
+      selectedNgo.id,
+      (newMessage) => {
+        setMessages((prev) => [...prev, newMessage]);
+
+        if (newMessage.sender_id !== donor.id) {
+          setNgoTyping(true);
+
+          setTimeout(() => setNgoTyping(false), 1500);
         }
-      )
-      .subscribe();
+
+        scrollBottom();
+      }
+    );
+
+    /* ------- TYPING INDICATOR LISTENER ------- */
+    const typingSub = subscribeToTyping(donor.id, (payload) => {
+      if (payload.sender_id === selectedNgo.id) {
+        setNgoTyping(payload.typing);
+
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => setNgoTyping(false), 2000);
+      }
+    });
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(typingSub);
     };
   }, [selectedNgo]);
 
-  // 🔹 Auto-scroll to latest message
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  /* ---------------------------------------------------------
+     AUTO SCROLL
+  ----------------------------------------------------------*/
+  const scrollBottom = () =>
+    setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 200);
 
-  const sendMessage = async () => {
-    if (!newMsg.trim() || !selectedNgo) return;
+  /* ---------------------------------------------------------
+     SEND MESSAGE
+  ----------------------------------------------------------*/
+  const sendMsg = async () => {
+    if (!newMsg.trim()) return;
 
-    try {
-      const { error } = await supabase.from("donor_messages").insert({
-        donor_id: donor.id,
-        ngo_id: selectedNgo.id,
-        message: newMsg.trim(),
-        sender_role: "donor",
-      });
-      if (error) throw error;
-      setNewMsg("");
-    } catch (err) {
-      console.error("Error sending message:", err);
-    }
+    await sendMessage(
+      donor.id,
+      "donor",
+      selectedNgo.id,
+      "ngo",
+      newMsg.trim()
+    );
+
+    setNewMsg("");
+    scrollBottom();
   };
 
+  /* ---------------------------------------------------------
+     DONOR TYPING STATUS (broadcast)
+  ----------------------------------------------------------*/
+  const handleTyping = (value: string) => {
+    setNewMsg(value);
+
+    sendTypingStatus(donor.id, selectedNgo.id, true);
+
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+      sendTypingStatus(donor.id, selectedNgo.id, false);
+    }, 1200);
+  };
+
+  /* ---------------------------------------------------------
+     SEARCH NGO
+  ----------------------------------------------------------*/
+  useEffect(() => {
+    if (!search.trim()) return setFilteredNgos(ngos);
+
+    setFilteredNgos(
+      ngos.filter((n) => n.name.toLowerCase().includes(search.toLowerCase()))
+    );
+  }, [search, ngos]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex flex-col items-center p-6">
-      {/* Header */}
-      <div className="w-full max-w-5xl flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-6">
+
+      {/* HEADER */}
+      <div className="max-w-5xl mx-auto flex justify-between mb-6 items-center">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold"
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
         >
           <ArrowLeft size={20} /> Back
         </button>
-        <h1 className="text-3xl font-extrabold text-blue-700 flex items-center gap-2">
-          <MessageCircle size={28} /> Message Center
+
+        <h1 className="text-3xl font-bold text-blue-700 flex items-center gap-2">
+          <MessageCircle size={28} /> Messages
         </h1>
       </div>
 
-      <div className="flex flex-col md:flex-row w-full max-w-5xl bg-white shadow-lg border border-gray-200 rounded-2xl overflow-hidden">
-        {/* NGO List */}
-        <aside className="w-full md:w-1/3 border-r border-gray-200 p-6 bg-blue-50">
-          <h2 className="text-lg font-semibold text-blue-700 mb-4">NGOs</h2>
-          <ul className="space-y-3 max-h-[450px] overflow-y-auto">
-            {ngos.map((ngo) => (
+      <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-2xl flex overflow-hidden">
+
+        {/* LEFT – NGO LIST */}
+        <aside className="w-1/3 border-r bg-blue-50 p-6 flex flex-col">
+
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-3 text-gray-500" size={18} />
+            <input
+              placeholder="Search NGO..."
+              className="w-full pl-10 pr-3 py-2 rounded-lg border"
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          {/* NGO LIST */}
+          <ul className="space-y-3 overflow-y-auto max-h-[500px]">
+            {filteredNgos.map((ngo) => (
               <li
                 key={ngo.id}
-                onClick={() => setSelectedNgo(ngo)}
-                className={`cursor-pointer p-3 rounded-lg transition ${
+                onClick={() => {
+                  setSelectedNgo(ngo);
+                  setMessages([]);
+                }}
+                className={`cursor-pointer p-3 rounded-xl ${
                   selectedNgo?.id === ngo.id
                     ? "bg-blue-600 text-white"
                     : "bg-white hover:bg-blue-100"
                 }`}
               >
-                <p className="font-semibold">{ngo.name}</p>
+                <div className="flex justify-between">
+                  <p className="font-semibold">{ngo.name}</p>
+
+                  {ngo.unread && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      New
+                    </span>
+                  )}
+                </div>
+
                 <p
-                  className={`text-sm ${
-                    selectedNgo?.id === ngo.id ? "text-blue-100" : "text-gray-600"
+                  className={`text-xs truncate ${
+                    selectedNgo?.id === ngo.id
+                      ? "text-blue-100"
+                      : "text-gray-600"
                   }`}
                 >
-                  {ngo.email}
+                  {ngo.last_message || "No messages yet"}
+                </p>
+
+                <p className="text-[10px] text-gray-500">
+                  {ngo.last_time &&
+                    new Date(ngo.last_time).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                 </p>
               </li>
             ))}
           </ul>
         </aside>
 
-        {/* Chat Section */}
+        {/* RIGHT – CHAT */}
         <main className="flex-1 p-6 flex flex-col">
-          {selectedNgo ? (
+          {!selectedNgo ? (
+            <div className="flex-1 flex items-center justify-center text-gray-500">
+              Select an NGO to start chatting
+            </div>
+          ) : (
             <>
-              <h2 className="text-xl font-bold text-blue-700 mb-4 border-b pb-2">
-                Chat with {selectedNgo.name}
-              </h2>
+              {/* Top header */}
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-bold text-blue-700">
+                  {selectedNgo.name}
+                </h2>
 
-              {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto space-y-3 mb-4 border rounded-lg p-4 bg-gray-50">
-                {loading ? (
-                  <p className="text-gray-500 text-center">Loading messages...</p>
-                ) : messages.length > 0 ? (
-                  messages.map((m) => (
-                    <div
-                      key={m.id}
-                      className={`flex ${
-                        m.sender_role === "donor"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[70%] p-3 rounded-xl ${
-                          m.sender_role === "donor"
-                            ? "bg-blue-600 text-white rounded-br-none"
-                            : "bg-green-100 text-gray-800 rounded-bl-none"
-                        }`}
-                      >
-                        <p className="text-sm">{m.message}</p>
-                        <p className="text-xs mt-1 opacity-70">
-                          {new Date(m.created_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-center text-gray-600">
-                    No messages yet. Start the conversation!
-                  </p>
-                )}
-                <div ref={messagesEndRef} />
+                <span className="text-sm text-green-600">● Online</span>
               </div>
 
-              {/* Input */}
-              <div className="flex items-center gap-2">
+              {/* CHAT BOX */}
+              <div className="flex-1 overflow-y-auto space-y-3 bg-gray-50 p-4 rounded-lg border shadow-inner">
+
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex ${
+                      m.sender_id === donor.id ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[70%] p-3 rounded-xl ${
+                        m.sender_id === donor.id
+                          ? "bg-blue-600 text-white rounded-br-none"
+                          : "bg-green-100 text-gray-800 rounded-bl-none"
+                      }`}
+                    >
+                      <p>{m.message}</p>
+
+                      <p className="text-xs mt-1 flex items-center gap-1 opacity-70">
+                        {new Date(m.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+
+                        {m.sender_id === donor.id &&
+                          (m.read_status ? (
+                            <CheckCheck size={14} />
+                          ) : (
+                            <Check size={14} />
+                          ))}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Typing */}
+                {ngoTyping && (
+                  <p className="text-xs text-gray-600 italic">NGO is typing…</p>
+                )}
+
+                <div ref={endRef} />
+              </div>
+
+              {/* INPUT BOX */}
+              <div className="flex items-center gap-2 mt-4">
                 <input
                   value={newMsg}
-                  onChange={(e) => setNewMsg(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                  className="flex-1 border rounded-lg p-3 focus:ring-2 focus:ring-blue-400"
-                  placeholder="Type your message..."
+                  onChange={(e) => handleTyping(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMsg()}
+                  placeholder="Type a message..."
+                  className="flex-1 border p-3 rounded-lg focus:ring-2 focus:ring-blue-400"
                 />
+
                 <button
-                  onClick={sendMessage}
-                  className="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 flex items-center gap-1"
+                  onClick={sendMsg}
+                  className="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700"
                 >
-                  <Send size={18} /> Send
+                  <Send size={18} />
                 </button>
               </div>
             </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-600">
-              <p>Select an NGO from the left to start chatting.</p>
-            </div>
           )}
         </main>
       </div>

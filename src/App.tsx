@@ -19,6 +19,9 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import About from "./pages/common/About";
 import NotFound from "./pages/NotFound";
+import FAQ from "./pages/FAQ";
+// ⭐ NEW — Nearby NGOs Page
+import NearbyNGOsPage from "./pages/NearbyNGOs";
 
 // 💖 Donor Pages
 import DonorDashboard from "./pages/donor/Dashboard";
@@ -82,6 +85,7 @@ export default function App() {
         <Sonner />
         <BrowserRouter>
           <Routes>
+
             {/* 🌍 PUBLIC ROUTES */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -92,6 +96,10 @@ export default function App() {
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
+            {/* ⭐ NEW Nearby NGOs Route */}
+            <Route path="/nearby-ngos" element={<NearbyNGOsPage />} />
+            <Route path="/faq" element={<FAQ />} />
 
             {/* 💖 DONOR ROUTES */}
             <Route
@@ -224,6 +232,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/ngo/messages"
               element={
@@ -423,6 +432,7 @@ export default function App() {
 
             {/* 🚫 404 PAGE */}
             <Route path="*" element={<NotFound />} />
+
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

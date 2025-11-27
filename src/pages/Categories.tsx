@@ -1,7 +1,9 @@
-export default function Categories() {
+const CategoriesPage = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center text-2xl font-bold">
-      Categories Page Coming Soon!
+    <div className="p-6">
+      <h1 className="text-3xl font-bold">Browse Categories</h1>
     </div>
   );
-}
+};
+
+export default CategoriesPage;

@@ -384,3 +384,234 @@ SELECT
   id,
   NOW()
 FROM volunteer_assignments;
+
+
+
+
+
+
+
+ALTER TABLE donations
+ADD COLUMN IF NOT EXISTS image_url TEXT,
+ADD COLUMN IF NOT EXISTS ngo_feedback TEXT,
+ADD COLUMN IF NOT EXISTS donor_rating INT CHECK (donor_rating BETWEEN 1 AND 5),
+ADD COLUMN IF NOT EXISTS assigned_volunteer UUID REFERENCES volunteers(id) ON DELETE SET NULL,
+ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP,
+ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+CREATE TABLE IF NOT EXISTS donation_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  donation_id UUID REFERENCES donations(id) ON DELETE CASCADE,
+  event TEXT NOT NULL,
+  note TEXT,
+  created_by UUID,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS volunteer_assignments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  donation_id UUID REFERENCES donations(id) ON DELETE CASCADE,
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'Assigned' CHECK (status IN ('Assigned', 'In Progress', 'Delivered', 'Cancelled')),
+  notes TEXT,
+  assigned_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  completion_time TIMESTAMP,
+  rating INT CHECK (rating BETWEEN 1 AND 5)
+);
+CREATE OR REPLACE FUNCTION log_volunteer_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (TG_OP = 'UPDATE' AND NEW.status <> OLD.status) THEN
+    INSERT INTO volunteer_activity (volunteer_id, action, details, related_task, created_at)
+    VALUES (
+      NEW.volunteer_id,
+      CASE
+        WHEN NEW.status = 'Delivered' THEN 'Task Completed'
+        WHEN NEW.status = 'In Progress' THEN 'Task Started'
+        WHEN NEW.status = 'Cancelled' THEN 'Task Cancelled'
+        ELSE 'Task Updated'
+      END,
+      CONCAT('Status changed from ', OLD.status, ' to ', NEW.status),
+      NEW.id,
+      NOW()
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_log_volunteer_activity ON volunteer_assignments;
+
+CREATE TRIGGER trg_log_volunteer_activity
+AFTER UPDATE OF status ON volunteer_assignments
+FOR EACH ROW
+EXECUTE FUNCTION log_volunteer_activity();
+
+ALTER TABLE volunteers
+ADD COLUMN IF NOT EXISTS image_url TEXT,
+ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Available' CHECK (status IN ('Available','Busy','Offline')),
+ADD COLUMN IF NOT EXISTS skills TEXT,
+ADD COLUMN IF NOT EXISTS bio TEXT;
+
+DROP TABLE IF EXISTS volunteer_impact CASCADE;
+
+CREATE TABLE volunteer_impact (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  volunteer_id UUID REFERENCES volunteers(id) ON DELETE CASCADE,
+  total_tasks INT DEFAULT 0,
+  completed_tasks INT DEFAULT 0,
+  cancelled_tasks INT DEFAULT 0,
+  active_tasks INT DEFAULT 0,
+  ngos_helped INT DEFAULT 0,
+  performance_level TEXT DEFAULT 'Beginner' CHECK (
+    performance_level IN ('Beginner','Active','Leader','Hero')
+  ),
+  average_completion_time INTERVAL,
+  success_rate NUMERIC DEFAULT 0,
+  last_active TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(volunteer_id)
+);
+CREATE OR REPLACE FUNCTION create_volunteer_impact_row()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO volunteer_impact (volunteer_id)
+  VALUES (NEW.id)
+  ON CONFLICT (volunteer_id) DO NOTHING;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_create_volunteer_impact_row ON volunteers;
+
+CREATE TRIGGER trg_create_volunteer_impact_row
+AFTER INSERT ON volunteers
+FOR EACH ROW
+EXECUTE FUNCTION create_volunteer_impact_row();
+
+ALTER TABLE volunteer_assignments
+ADD CONSTRAINT unique_active_assignment
+UNIQUE (donation_id);
+
+ALTER TABLE donors
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS address TEXT;
+
+ALTER TABLE donations
+ADD COLUMN IF NOT EXISTS pickup_address TEXT,
+ADD COLUMN IF NOT EXISTS donor_phone TEXT,
+ADD COLUMN IF NOT EXISTS instructions TEXT;
+
+
+CREATE TABLE IF NOT EXISTS messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Who sent the message
+  sender_id UUID NOT NULL,
+  sender_role TEXT NOT NULL CHECK (
+    sender_role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  -- Who should receive the message
+  receiver_id UUID NOT NULL,
+  receiver_role TEXT NOT NULL CHECK (
+    receiver_role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  -- The message itself
+  message TEXT NOT NULL,
+
+  -- Read / unread system
+  read_status BOOLEAN DEFAULT FALSE,
+
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Faster lookup
+CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_id);
+
+DROP TABLE IF EXISTS messages CASCADE;
+
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Who sent the message
+  sender_id UUID NOT NULL,
+  sender_role TEXT NOT NULL CHECK (
+    sender_role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  -- Who receives the message
+  receiver_id UUID NOT NULL,
+  receiver_role TEXT NOT NULL CHECK (
+    receiver_role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  -- Message content
+  message TEXT NOT NULL,
+
+  -- Seen status
+  read_status BOOLEAN DEFAULT FALSE,
+
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_messages_sender ON messages(sender_id);
+CREATE INDEX idx_messages_receiver ON messages(receiver_id);
+CREATE INDEX idx_messages_pair ON messages(sender_id, receiver_id);
+ALTER TABLE messages
+ADD COLUMN IF NOT EXISTS message_type TEXT DEFAULT 'text'
+CHECK (message_type IN ('text','image','audio','file','emoji','system'));
+DROP TABLE IF EXISTS messages CASCADE;
+
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Who sent
+  sender_id UUID NOT NULL,
+  sender_role TEXT NOT NULL CHECK (
+    sender_role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  -- Who receives
+  receiver_id UUID NOT NULL,
+  receiver_role TEXT NOT NULL CHECK (
+    receiver_role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  -- Text content (if applicable)
+  message TEXT,
+
+  -- Attachment or media URL
+  media_url TEXT,
+
+  -- Message type
+  message_type TEXT DEFAULT 'text'
+    CHECK (message_type IN ('text','image','audio','file','emoji','system')),
+
+  -- Read indicator
+  read_status BOOLEAN DEFAULT FALSE,
+
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_messages_sender ON messages(sender_id);
+CREATE INDEX idx_messages_receiver ON messages(receiver_id);
+CREATE INDEX idx_messages_pair ON messages(sender_id, receiver_id);
+INSERT INTO messages (id, sender_id, sender_role, receiver_id, receiver_role, message, message_type, read_status, created_at)
+SELECT
+  id,
+  donor_id AS sender_id,
+  'donor' AS sender_role,
+  ngo_id AS receiver_id,
+  'ngo' AS receiver_role,
+  message,
+  'text' AS message_type,
+  FALSE AS read_status,
+  created_at
+FROM donor_messages
+WHERE message IS NOT NULL;

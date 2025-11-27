@@ -19,19 +19,22 @@ const ManageDonations = () => {
   // 🟦 Fetch NGO donations
   const fetchDonations = async () => {
     setLoading(true);
+
     const { data, error } = await supabase
       .from("donations")
-      .select("*, donors(name, email, image_url)")
+      .select(`
+        *,
+        donors(name, email, phone, address, image_url)
+      `)
       .eq("ngo_id", ngo.id)
       .neq("status", "Cancelled")
       .order("created_at", { ascending: false });
 
     if (!error) setDonations(data || []);
-    else console.error(error);
     setLoading(false);
   };
 
-  // 🟩 Fetch Volunteers (linked by ngo_id or ngo_volunteers mapping)
+  // 🟩 Fetch Volunteers (via ngo_id OR mapping table)
   const fetchVolunteers = async () => {
     let { data: volunteers } = await supabase
       .from("volunteers")
@@ -43,6 +46,7 @@ const ManageDonations = () => {
         .from("ngo_volunteers")
         .select("volunteers (id, name, email)")
         .eq("ngo_id", ngo.id);
+
       volunteers = mapped?.map((m: any) => m.volunteers) || [];
     }
 
@@ -51,10 +55,13 @@ const ManageDonations = () => {
 
   // ✅ Accept Donation
   const handleAccept = async (id: string) => {
-    await supabase.from("donations").update({
-      status: "Accepted",
-      updated_at: new Date(),
-    }).eq("id", id);
+    await supabase
+      .from("donations")
+      .update({
+        status: "Accepted",
+        updated_at: new Date(),
+      })
+      .eq("id", id);
 
     await supabase.from("donation_events").insert({
       donation_id: id,
@@ -68,10 +75,13 @@ const ManageDonations = () => {
 
   // ❌ Reject Donation
   const handleReject = async (id: string) => {
-    await supabase.from("donations").update({
-      status: "Cancelled",
-      updated_at: new Date(),
-    }).eq("id", id);
+    await supabase
+      .from("donations")
+      .update({
+        status: "Cancelled",
+        updated_at: new Date(),
+      })
+      .eq("id", id);
 
     await supabase.from("donation_events").insert({
       donation_id: id,
@@ -83,28 +93,57 @@ const ManageDonations = () => {
     fetchDonations();
   };
 
-  // 🚚 Assign Volunteer
+  // 🚚 Improved Volunteer Assignment (NO DUPLICATES)
   const handleAssignVolunteer = async (donationId: string, volunteerId: string) => {
-    if (!volunteerId || volunteerId === "Select") return;
+    if (!volunteerId) return;
+
     setAssigning(donationId);
 
-    // Update donation record
-    await supabase.from("donations").update({
-      assigned_volunteer: volunteerId,
-      status: "Assigned",
-      assigned_at: new Date(),
-      updated_at: new Date(),
-    }).eq("id", donationId);
+    // 1️⃣ Check if donation already has an assignment
+    const { data: existing } = await supabase
+      .from("volunteer_assignments")
+      .select("id, status")
+      .eq("donation_id", donationId)
+      .maybeSingle();
 
-    // Create assignment record
-    await supabase.from("volunteer_assignments").insert({
-      donation_id: donationId,
-      volunteer_id: volunteerId,
-      ngo_id: ngo.id,
-      status: "Assigned",
-    });
+    // ❌ prevent duplicate active assignments
+    if (existing && existing.status !== "Cancelled") {
+      setAssigning(null);
+      return alert("⚠ This donation already has an active volunteer assigned.");
+    }
 
-    // Log event
+    // 2️⃣ If previous was CANCELLED → Update instead of inserting
+    if (existing && existing.status === "Cancelled") {
+      await supabase
+        .from("volunteer_assignments")
+        .update({
+          volunteer_id: volunteerId,
+          status: "Assigned",
+          updated_at: new Date(),
+        })
+        .eq("id", existing.id);
+    } else {
+      // 3️⃣ New assignment
+      await supabase.from("volunteer_assignments").insert({
+        donation_id: donationId,
+        volunteer_id: volunteerId,
+        ngo_id: ngo.id,
+        status: "Assigned",
+      });
+    }
+
+    // 4️⃣ Update donation table
+    await supabase
+      .from("donations")
+      .update({
+        assigned_volunteer: volunteerId,
+        status: "Assigned",
+        assigned_at: new Date(),
+        updated_at: new Date(),
+      })
+      .eq("id", donationId);
+
+    // 5️⃣ Log Event
     await supabase.from("donation_events").insert({
       donation_id: donationId,
       event: "Volunteer Assigned",
@@ -118,12 +157,15 @@ const ManageDonations = () => {
 
   // 🎉 Mark Completed
   const handleComplete = async (id: string) => {
-    await supabase.from("donations").update({
-      status: "Completed",
-      delivered_at: new Date(),
-      updated_at: new Date(),
-      ngo_feedback: feedback[id] || null,
-    }).eq("id", id);
+    await supabase
+      .from("donations")
+      .update({
+        status: "Completed",
+        delivered_at: new Date(),
+        updated_at: new Date(),
+        ngo_feedback: feedback[id] || null,
+      })
+      .eq("id", id);
 
     await supabase.from("donation_events").insert({
       donation_id: id,
@@ -155,7 +197,7 @@ const ManageDonations = () => {
               <thead className="bg-blue-100 text-gray-700">
                 <tr>
                   <th className="p-3">Image</th>
-                  <th className="p-3">Donor</th>
+                  <th className="p-3">Donor Details</th>
                   <th className="p-3">Category</th>
                   <th className="p-3">Description</th>
                   <th className="p-3">Amount / Qty</th>
@@ -163,22 +205,38 @@ const ManageDonations = () => {
                   <th className="p-3">Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {donations.map((d) => (
                   <tr key={d.id} className="border-b hover:bg-gray-50 transition">
+                    {/* IMAGE */}
                     <td className="p-3">
                       {d.image_url ? (
-                        <img src={d.image_url} alt="Donation" className="w-16 h-16 rounded-lg object-cover" />
+                        <img
+                          src={d.image_url}
+                          alt="Donation"
+                          className="w-16 h-16 rounded-lg object-cover"
+                        />
                       ) : (
                         <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
                           <Package size={20} />
                         </div>
                       )}
                     </td>
-                    <td className="p-3 font-medium">{d.donors?.name}</td>
+
+                    {/* DONOR INFO */}
+                    <td className="p-3">
+                      <p className="font-bold">{d.donors?.name}</p>
+                      <p className="text-xs text-gray-600">{d.donors?.email}</p>
+                      <p className="text-xs text-gray-600">📞 {d.donors?.phone || "N/A"}</p>
+                      <p className="text-xs text-gray-600">📍 {d.donors?.address || "No address"}</p>
+                    </td>
+
                     <td className="p-3">{d.category}</td>
                     <td className="p-3 max-w-xs truncate">{d.description}</td>
                     <td className="p-3">{d.amount ? `₹${d.amount}` : d.quantity || "—"}</td>
+
+                    {/* STATUS */}
                     <td className="p-3">
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${
@@ -197,7 +255,7 @@ const ManageDonations = () => {
                       </span>
                     </td>
 
-                    {/* Actions */}
+                    {/* ACTIONS */}
                     <td className="p-3 flex flex-col gap-2">
                       {d.status === "Pending" && (
                         <div className="flex gap-2">
@@ -218,13 +276,17 @@ const ManageDonations = () => {
 
                       {d.status === "Accepted" && (
                         <select
-                          onChange={(e) => handleAssignVolunteer(d.id, e.target.value)}
+                          onChange={(e) =>
+                            handleAssignVolunteer(d.id, e.target.value)
+                          }
                           disabled={assigning === d.id}
                           className="border p-2 rounded-lg"
                         >
                           <option value="">Assign Volunteer</option>
                           {volunteers.map((v) => (
-                            <option key={v.id} value={v.id}>{v.name}</option>
+                            <option key={v.id} value={v.id}>
+                              {v.name}
+                            </option>
                           ))}
                         </select>
                       )}
@@ -236,7 +298,10 @@ const ManageDonations = () => {
                             className="border p-2 rounded text-sm"
                             value={feedback[d.id] || ""}
                             onChange={(e) =>
-                              setFeedback({ ...feedback, [d.id]: e.target.value })
+                              setFeedback({
+                                ...feedback,
+                                [d.id]: e.target.value,
+                              })
                             }
                           />
                           <button
