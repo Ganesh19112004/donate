@@ -615,3 +615,258 @@ SELECT
   created_at
 FROM donor_messages
 WHERE message IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS ngo_campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  goal_amount NUMERIC,
+  raised_amount NUMERIC DEFAULT 0,
+  status TEXT DEFAULT 'Active' CHECK (status IN ('Active', 'Completed', 'Paused')),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE OR REPLACE FUNCTION update_ngo_impact(ngo UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE ngo_impact
+  SET
+    total_donations = (SELECT COUNT(*) FROM donations WHERE ngo_id = ngo),
+    total_value = (SELECT COALESCE(SUM(amount), 0) FROM donations WHERE ngo_id = ngo),
+    total_donors = (SELECT COUNT(DISTINCT donor_id) FROM donations WHERE ngo_id = ngo),
+    total_volunteers = (SELECT COUNT(*) FROM ngo_volunteers WHERE ngo_id = ngo),
+    active_campaigns = (SELECT COUNT(*) FROM ngo_campaigns WHERE ngo_id = ngo AND status='Active'),
+    top_category = (
+      SELECT category
+      FROM donations
+      WHERE ngo_id = ngo
+      GROUP BY category
+      ORDER BY COUNT(*) DESC
+      LIMIT 1
+    ),
+    updated_at = NOW()
+  WHERE ngo_id = ngo;
+END;
+$$ LANGUAGE plpgsql;
+-- trigger function that uses NEW.ngo_id
+CREATE OR REPLACE FUNCTION trg_fn_update_ngo_impact()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  -- call your existing function (update_ngo_impact) passing ngo_id from NEW
+  PERFORM update_ngo_impact(NEW.ngo_id);
+  RETURN NEW; -- for AFTER triggers return value is ignored but RETURN NEW is conventional
+END;
+$$;
+
+-- create trigger that calls the trigger function
+CREATE TRIGGER trg_update_impact_donations
+AFTER INSERT OR UPDATE ON donations
+FOR EACH ROW
+EXECUTE FUNCTION trg_fn_update_ngo_impact();
+ALTER TABLE ngos
+ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+ALTER TABLE ngos
+ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS location_accuracy DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS map_source TEXT DEFAULT 'manual' 
+  CHECK (map_source IN ('manual','gps','auto')),
+ADD COLUMN IF NOT EXISTS formatted_address TEXT,
+ADD COLUMN IF NOT EXISTS pincode TEXT;
+
+ALTER TABLE ngos
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS address TEXT,
+ADD COLUMN IF NOT EXISTS city TEXT,
+ADD COLUMN IF NOT EXISTS state TEXT,
+ADD COLUMN IF NOT EXISTS country TEXT,
+ADD COLUMN IF NOT EXISTS pincode TEXT,
+ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS location_accuracy DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS formatted_address TEXT,
+ADD COLUMN IF NOT EXISTS map_source TEXT DEFAULT 'manual'
+  CHECK (map_source IN ('manual','gps','auto')),
+ADD COLUMN IF NOT EXISTS website TEXT,
+ADD COLUMN IF NOT EXISTS facebook TEXT,
+ADD COLUMN IF NOT EXISTS instagram TEXT,
+ADD COLUMN IF NOT EXISTS twitter TEXT,
+ADD COLUMN IF NOT EXISTS image_url TEXT,
+ADD COLUMN IF NOT EXISTS description TEXT,
+ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS rating NUMERIC CHECK (rating BETWEEN 0 AND 5),
+ADD COLUMN IF NOT EXISTS total_reviews INT DEFAULT 0;
+CREATE TABLE IF NOT EXISTS ngo_gallery (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  title TEXT,
+  media_url TEXT NOT NULL,
+  media_type TEXT CHECK (media_type IN ('image', 'video')) DEFAULT 'image',
+  description TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS ngo_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  donor_id UUID REFERENCES donors(id) ON DELETE CASCADE,
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  rating INT CHECK (rating BETWEEN 1 AND 5),
+  review TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE OR REPLACE FUNCTION create_donor_impact_row()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO donor_impact (donor_id)
+  VALUES (NEW.id)
+  ON CONFLICT (donor_id) DO NOTHING;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_create_donor_impact_row ON donors;
+
+CREATE TRIGGER trg_create_donor_impact_row
+AFTER INSERT ON donors
+FOR EACH ROW
+EXECUTE FUNCTION create_donor_impact_row();
+CREATE OR REPLACE FUNCTION update_donor_impact(donor_uid UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE donor_impact
+  SET
+    total_donations = (SELECT COUNT(*) FROM donations WHERE donor_id = donor_uid),
+    total_value = COALESCE((SELECT SUM(amount) FROM donations WHERE donor_id = donor_uid), 0),
+    ngos_helped = (SELECT COUNT(DISTINCT ngo_id) FROM donations WHERE donor_id = donor_uid),
+    recent_donation_date = (SELECT MAX(created_at) FROM donations WHERE donor_id = donor_uid),
+    avg_donation_value = (
+      SELECT AVG(amount) FROM donations WHERE donor_id = donor_uid
+    ),
+    top_category = (
+      SELECT category FROM donations
+      WHERE donor_id = donor_uid
+      GROUP BY category
+      ORDER BY COUNT(*) DESC LIMIT 1
+    ),
+    progress_percent = LEAST(
+       (SELECT COUNT(*) FROM donations WHERE donor_id = donor_uid) * 10,
+       100
+    ),
+    donor_level = CASE
+        WHEN (SELECT COUNT(*) FROM donations WHERE donor_id = donor_uid) >= 20 THEN 'Gold'
+        WHEN (SELECT COUNT(*) FROM donations WHERE donor_id = donor_uid) >= 10 THEN 'Silver'
+        ELSE 'Bronze'
+    END,
+    updated_at = NOW()
+  WHERE donor_id = donor_uid;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trg_update_donor_impact
+AFTER INSERT OR UPDATE ON donations
+FOR EACH ROW
+EXECUTE FUNCTION update_donor_impact();
+-- existing function (example)
+-- CREATE FUNCTION update_donor_impact(p_donor_id uuid) RETURNS void ...
+
+-- wrapper trigger function
+CREATE OR REPLACE FUNCTION update_donor_impact_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  PERFORM update_donor_impact(NEW.donor_id);
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_update_donor_impact ON donations;
+
+CREATE TRIGGER trg_update_donor_impact
+AFTER INSERT OR UPDATE ON donations
+FOR EACH ROW
+EXECUTE FUNCTION update_donor_impact_trigger();
+DROP TABLE IF EXISTS donor_impact CASCADE;
+CREATE TABLE donor_impact (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  donor_id UUID UNIQUE REFERENCES donors(id) ON DELETE CASCADE,
+
+  total_donations INT DEFAULT 0,
+  total_value NUMERIC DEFAULT 0,
+  ngos_helped INT DEFAULT 0,
+
+  recent_donation_date TIMESTAMP,
+  top_category TEXT,
+  avg_donation_value NUMERIC DEFAULT 0,
+
+  donor_level TEXT DEFAULT 'Bronze'
+    CHECK (donor_level IN ('Bronze','Silver','Gold')),
+
+  progress_percent INT DEFAULT 0
+    CHECK (progress_percent BETWEEN 0 AND 100),
+
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+-- Ensure function exists (this is safe to recreate)
+CREATE OR REPLACE FUNCTION create_donor_impact_row()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO donor_impact (donor_id)
+  VALUES (NEW.id)
+  ON CONFLICT (donor_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger only if it doesn't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger t
+    JOIN pg_class c ON t.tgrelid = c.oid
+    JOIN pg_namespace n ON c.relnamespace = n.oid
+    WHERE t.tgname = 'trg_create_donor_impact_row'
+      AND c.relname = 'donors'
+      AND n.nspname = 'public'  -- change if donors is in another schema
+  ) THEN
+    EXECUTE 'CREATE TRIGGER trg_create_donor_impact_row
+             AFTER INSERT ON public.donors
+             FOR EACH ROW
+             EXECUTE FUNCTION create_donor_impact_row()';
+  END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION update_donor_impact(donor_uid UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE donor_impact
+  SET
+    total_donations = (SELECT COUNT(*) FROM donations WHERE donor_id = donor_uid),
+    total_value = COALESCE((SELECT SUM(amount) FROM donations WHERE donor_id = donor_uid), 0),
+    ngos_helped = (SELECT COUNT(DISTINCT ngo_id) FROM donations WHERE donor_id = donor_uid),
+    recent_donation_date = (SELECT MAX(created_at) FROM donations WHERE donor_id = donor_uid),
+    avg_donation_value = (SELECT AVG(amount) FROM donations WHERE donor_id = donor_uid),
+    top_category = (
+      SELECT category FROM donations
+      WHERE donor_id = donor_uid
+      GROUP BY category
+      ORDER BY COUNT(*) DESC LIMIT 1
+    ),
+    donor_level = CASE
+      WHEN (SELECT COUNT(*) FROM donations WHERE donor_id = donor_uid) >= 20 THEN 'Gold'
+      WHEN (SELECT COUNT(*) FROM donations WHERE donor_id = donor_uid) >= 10 THEN 'Silver'
+      ELSE 'Bronze'
+    END,
+    progress_percent = LEAST(
+      (SELECT COUNT(*) FROM donations WHERE donor_id = donor_uid) * 10,
+      100
+    ),
+    updated_at = NOW()
+  WHERE donor_id = donor_uid;
+END;
+$$ LANGUAGE plpgsql;

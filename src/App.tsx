@@ -35,6 +35,7 @@ import DonorSettings from "./pages/donor/Settings";
 import Favorites from "./pages/donor/Favorites";
 import MyImpact from "./pages/donor/MyImpact";
 import MessageCenter from "./pages/donor/MessageCenter";
+import FullNGOProfile from "./pages/donor/FullNGOProfile";
 
 // 🏢 NGO Pages
 import NGODashboard from "./pages/ngo/Dashboard";
@@ -70,6 +71,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import ManageNGOs from "./pages/admin/ManageNGOs";
 import ManageDonors from "./pages/admin/ManageDonors";
 import ManageVolunteers from "./pages/admin/ManageVolunteers";
+import AdminNGOManager from "./pages/admin/ngo/Manage";
 
 const queryClient = new QueryClient();
 
@@ -166,6 +168,15 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+  path="/donor/ngo/:id"
+  element={
+    <ProtectedRoute allowedRoles={["donor"]}>
+      <FullNGOProfile />
+    </ProtectedRoute>
+  }
+/>
+
             <Route
               path="/donor/settings"
               element={
@@ -421,6 +432,15 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+  path="/admin/ngo/:id/manage"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminNGOManager />
+    </ProtectedRoute>
+  }
+/>
+
             <Route
               path="/admin/volunteers"
               element={
