@@ -881,3 +881,6 @@ CREATE TABLE IF NOT EXISTS ngo_needs (
   urgency TEXT CHECK (urgency IN ('low','medium','high')),
   created_at TIMESTAMP DEFAULT NOW()
 );
+ALTER TABLE ngos
+ADD COLUMN IF NOT EXISTS image_path TEXT;
+

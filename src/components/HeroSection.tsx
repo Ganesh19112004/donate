@@ -1,9 +1,60 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MapPin } from "lucide-react";
 import heroImage from "@/assets/hero-community.jpg";
 import { Link } from "react-router-dom";
 
 const HeroSection = () => {
+  const [stats, setStats] = useState({
+    totalDonations: 0,
+    partnerNGOs: 0,
+    totalDonors: 0,
+    totalVolunteers: 0,
+    totalCities: 0,
+  });
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    // Count Donations
+    const { data: donations } = await supabase
+      .from("donations")
+      .select("id");
+
+    // Count NGOs
+    const { data: ngos } = await supabase
+      .from("ngos")
+      .select("id, city");
+
+    // Count Donors
+    const { data: donors } = await supabase
+      .from("donors")
+      .select("id");
+
+    // Count Volunteers
+    const { data: volunteers } = await supabase
+      .from("volunteers")
+      .select("id");
+
+    // Unique Cities
+    const uniqueCities =
+      ngos?.reduce((set, ngo) => {
+        if (ngo.city) set.add(ngo.city.trim().toLowerCase());
+        return set;
+      }, new Set()) || new Set();
+
+    setStats({
+      totalDonations: donations?.length || 0,
+      partnerNGOs: ngos?.length || 0,
+      totalDonors: donors?.length || 0,
+      totalVolunteers: volunteers?.length || 0,
+      totalCities: uniqueCities.size || 0,
+    });
+  };
+
   return (
     <section className="relative overflow-hidden py-20 lg:py-32">
       <div className="absolute inset-0 gradient-subtle"></div>
@@ -11,7 +62,7 @@ const HeroSection = () => {
       <div className="container relative mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
 
-          {/* LEFT SIDE */}
+          {/* LEFT */}
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
@@ -21,15 +72,13 @@ const HeroSection = () => {
               </h1>
 
               <p className="text-xl text-muted-foreground leading-relaxed">
-                Make a direct impact in your community by donating exactly what local NGOs need most.
-                From school supplies to healthcare essentials, every donation matters.
+                Make a direct impact in your community by donating exactly what NGOs need most.
+                Every contribution matters—big or small.
               </p>
             </div>
 
-            {/* ⭐ WORKING BUTTONS */}
+            {/* BUTTONS */}
             <div className="flex flex-col sm:flex-row gap-4">
-
-              {/* ✔ Start Donating */}
               <Link to="/donor/create-donation">
                 <Button
                   size="lg"
@@ -40,7 +89,6 @@ const HeroSection = () => {
                 </Button>
               </Link>
 
-              {/* ✔ Find Nearby NGOs */}
               <Link to="/nearby-ngos">
                 <Button
                   variant="outline"
@@ -51,32 +99,55 @@ const HeroSection = () => {
                   Find Nearby NGOs
                 </Button>
               </Link>
-
             </div>
 
-            {/* STATS */}
-            <div className="flex items-center space-x-8 pt-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">2,500+</div>
-                <div className="text-sm text-muted-foreground">Items Donated</div>
+            {/* REAL-TIME STATS */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
+
+              <div className="text-center p-4 rounded-xl bg-white shadow">
+                <div className="text-3xl font-bold text-primary">
+                  {stats.totalDonations}+
+                </div>
+                <div className="text-sm text-muted-foreground">Donations</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">150+</div>
+
+              <div className="text-center p-4 rounded-xl bg-white shadow">
+                <div className="text-3xl font-bold text-primary">
+                  {stats.partnerNGOs}+
+                </div>
                 <div className="text-sm text-muted-foreground">Partner NGOs</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">50+</div>
+
+              <div className="text-center p-4 rounded-xl bg-white shadow">
+                <div className="text-3xl font-bold text-primary">
+                  {stats.totalCities}+
+                </div>
                 <div className="text-sm text-muted-foreground">Cities Covered</div>
               </div>
+
+              <div className="text-center p-4 rounded-xl bg-white shadow">
+                <div className="text-3xl font-bold text-primary">
+                  {stats.totalDonors}+
+                </div>
+                <div className="text-sm text-muted-foreground">Donors</div>
+              </div>
+
+              <div className="text-center p-4 rounded-xl bg-white shadow">
+                <div className="text-3xl font-bold text-primary">
+                  {stats.totalVolunteers}+
+                </div>
+                <div className="text-sm text-muted-foreground">Volunteers</div>
+              </div>
+
             </div>
           </div>
 
-          {/* RIGHT IMAGE */}
+          {/* IMAGE */}
           <div className="relative">
             <div className="relative rounded-2xl overflow-hidden shadow-warm">
               <img
                 src={heroImage}
-                alt="Community members coming together to help local NGOs"
+                alt="Community helping NGOs"
                 className="w-full h-[500px] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent"></div>

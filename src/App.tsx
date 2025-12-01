@@ -20,6 +20,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import About from "./pages/common/About";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
+import NGODetails from "./pages/public/NGODetails";
 
 // ⭐ NEW — Nearby NGOs Page
 import NearbyNGOsPage from "./pages/NearbyNGOs";
@@ -97,17 +98,19 @@ export default function App() {
           <Routes>
 
             {/* 🌍 PUBLIC ROUTES */}
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/welcome" element={<Welcome />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<ContactUs />} />
-            <Route path="/impact" element={<ImpactStories />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/nearby-ngos" element={<NearbyNGOsPage />} />
-            <Route path="/faq" element={<FAQ />} />
+<Route path="/" element={<Index />} />
+<Route path="/auth" element={<Auth />} />
+<Route path="/welcome" element={<Welcome />} />
+<Route path="/about" element={<About />} />
+<Route path="/contact" element={<ContactUs />} />
+<Route path="/impact" element={<ImpactStories />} />
+<Route path="/how-it-works" element={<HowItWorks />} />
+<Route path="/terms" element={<TermsOfService />} />
+<Route path="/privacy-policy" element={<PrivacyPolicy />} />
+<Route path="/nearby-ngos" element={<NearbyNGOsPage />} />
+<Route path="/ngo/:id" element={<NGODetails />} />   {/* ⭐ ADD THIS ⭐ */}
+<Route path="/faq" element={<FAQ />} />
+
 
             {/* 💖 DONOR ROUTES */}
             <Route path="/donor/dashboard" element={
