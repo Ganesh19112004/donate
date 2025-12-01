@@ -20,6 +20,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import About from "./pages/common/About";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
+
 // ⭐ NEW — Nearby NGOs Page
 import NearbyNGOsPage from "./pages/NearbyNGOs";
 
@@ -53,6 +54,7 @@ import NGOReviews from "./pages/ngo/Reviews";
 import NGOPosts from "./pages/ngo/Posts";
 import NGOLogout from "./pages/ngo/Logout";
 import DonationDetailsNGO from "./pages/ngo/DonationDetails";
+import NGONeeds from "./pages/ngo/Needs";
 
 // 🤝 Volunteer Pages
 import VolunteerDashboard from "./pages/volunteer/VolunteerDashboard";
@@ -72,6 +74,11 @@ import ManageNGOs from "./pages/admin/ManageNGOs";
 import ManageDonors from "./pages/admin/ManageDonors";
 import ManageVolunteers from "./pages/admin/ManageVolunteers";
 import AdminNGOManager from "./pages/admin/ngo/Manage";
+import AdminReports from "./pages/admin/Reports";
+import AllDonations from "./pages/admin/AllDonations";
+
+// ⭐ NEW — SYSTEM MONITOR PAGE
+import SystemMonitor from "./pages/admin/SystemMonitor";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +92,7 @@ export default function App() {
       <TooltipProvider>
         <Toaster />
         <Sonner />
+
         <BrowserRouter>
           <Routes>
 
@@ -98,357 +106,289 @@ export default function App() {
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-
-            {/* ⭐ NEW Nearby NGOs Route */}
             <Route path="/nearby-ngos" element={<NearbyNGOsPage />} />
             <Route path="/faq" element={<FAQ />} />
 
             {/* 💖 DONOR ROUTES */}
-            <Route
-              path="/donor/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <DonorDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/donor/create-donation"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <CreateDonation />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/donor/profile"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <DonorProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/donor/history"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <DonationHistory />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/donor/details/:id"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <DonationDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/donor/edit-donation/:id"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <EditDonation />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/donor/messages"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <MessageCenter />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/donor/view-ngos"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <ViewNGOs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-  path="/donor/ngo/:id"
-  element={
-    <ProtectedRoute allowedRoles={["donor"]}>
-      <FullNGOProfile />
-    </ProtectedRoute>
-  }
-/>
+            <Route path="/donor/dashboard" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <DonorDashboard />
+              </ProtectedRoute>
+            }/>
 
-            <Route
-              path="/donor/settings"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <DonorSettings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/donor/favorites"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <Favorites />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/donor/impact"
-              element={
-                <ProtectedRoute allowedRoles={["donor"]}>
-                  <MyImpact />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/donor/create-donation" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <CreateDonation />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/profile" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <DonorProfile />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/history" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <DonationHistory />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/details/:id" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <DonationDetails />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/edit-donation/:id" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <EditDonation />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/messages" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <MessageCenter />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/view-ngos" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <ViewNGOs />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/ngo/:id" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <FullNGOProfile />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/settings" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <DonorSettings />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/favorites" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <Favorites />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/donor/impact" element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <MyImpact />
+              </ProtectedRoute>
+            }/>
 
             {/* 🏢 NGO ROUTES */}
-            <Route
-              path="/ngo/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <NGODashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/create"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <CreateCampaign />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/manage"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <ManageDonations />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/pending"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <PendingDonations />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/volunteers"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <Volunteers />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/ngo/dashboard" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGODashboard />
+              </ProtectedRoute>
+            }/>
 
-            <Route
-              path="/ngo/messages"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <NGOMessages />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/impact"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <NGOImpact />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/campaigns"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <Campaigns />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/donation/:id"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <DonationDetailsNGO />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/reports"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <Reports />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/profile"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <NGOProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/gallery"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <NGOGallery />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/reviews"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <NGOReviews />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/posts"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <NGOPosts />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ngo/logout"
-              element={
-                <ProtectedRoute allowedRoles={["ngo"]}>
-                  <NGOLogout />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/ngo/create" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <CreateCampaign />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/manage" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <ManageDonations />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/pending" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <PendingDonations />
+              </ProtectedRoute>
+            }/>
+
+            {/* ⭐ NEW — NGO Needs Page */}
+            <Route path="/ngo/needs" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGONeeds />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/volunteers" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <Volunteers />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/messages" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGOMessages />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/impact" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGOImpact />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/campaigns" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <Campaigns />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/donation/:id" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <DonationDetailsNGO />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/reports" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <Reports />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/profile" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGOProfile />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/gallery" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGOGallery />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/reviews" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGOReviews />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/posts" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGOPosts />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/ngo/logout" element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGOLogout />
+              </ProtectedRoute>
+            }/>
 
             {/* 🤝 VOLUNTEER ROUTES */}
-            <Route
-              path="/volunteer/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <VolunteerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/volunteer/tasks"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <AssignedTasks />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/volunteer/impact"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <VolunteerImpact />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/volunteer/join-ngo"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <JoinNGO />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/volunteer/activity"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <Activity />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/volunteer/leaderboard"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <Leaderboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/volunteer/reports"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <ReportsVolunteer />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/volunteer/messages"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <VolunteerMessages />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/volunteer/profile"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <VolunteerProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/volunteer/logout"
-              element={
-                <ProtectedRoute allowedRoles={["volunteer"]}>
-                  <VolunteerLogout />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/volunteer/dashboard" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <VolunteerDashboard />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/volunteer/tasks" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <AssignedTasks />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/volunteer/impact" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <VolunteerImpact />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/volunteer/join-ngo" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <JoinNGO />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/volunteer/activity" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <Activity />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/volunteer/leaderboard" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <Leaderboard />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/volunteer/reports" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <ReportsVolunteer />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/volunteer/messages" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <VolunteerMessages />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/volunteer/profile" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <VolunteerProfile />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/volunteer/logout" element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <VolunteerLogout />
+              </ProtectedRoute>
+            }/>
 
             {/* 👑 ADMIN ROUTES */}
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/ngos"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <ManageNGOs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/donors"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <ManageDonors />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-  path="/admin/ngo/:id/manage"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminNGOManager />
-    </ProtectedRoute>
-  }
-/>
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }/>
 
-            <Route
-              path="/admin/volunteers"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <ManageVolunteers />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/admin/ngos" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <ManageNGOs />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/admin/donors" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <ManageDonors />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/admin/ngo/:id/manage" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminNGOManager />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/admin/system" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <SystemMonitor />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/admin/volunteers" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <ManageVolunteers />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/admin/reports" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminReports />
+              </ProtectedRoute>
+            }/>
+
+            <Route path="/admin/donations" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AllDonations />
+              </ProtectedRoute>
+            }/>
 
             {/* 🚫 404 PAGE */}
             <Route path="*" element={<NotFound />} />

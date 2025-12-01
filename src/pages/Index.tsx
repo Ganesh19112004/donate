@@ -5,6 +5,7 @@ import FeaturedNGOs from "@/components/FeaturedNGOs";
 import NearbyNGOs from "@/components/NearbyNGOs";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import HomeCampaigns from "@/components/HomeCampaigns";
 
 const Index = () => {
   return (
@@ -18,6 +19,7 @@ const Index = () => {
         <CategoriesSection />
         <FeaturedNGOs />
         <NearbyNGOs />
+        <HomeCampaigns /> 
       </main>
 
       {/* ✅ CTA Section */}

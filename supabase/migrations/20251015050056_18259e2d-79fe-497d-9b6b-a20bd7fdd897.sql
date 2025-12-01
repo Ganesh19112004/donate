@@ -870,3 +870,14 @@ BEGIN
   WHERE donor_id = donor_uid;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS ngo_needs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  quantity INT,
+  urgency TEXT CHECK (urgency IN ('low','medium','high')),
+  created_at TIMESTAMP DEFAULT NOW()
+);

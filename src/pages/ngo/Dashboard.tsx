@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+
 import {
   Gift,
   Users,
@@ -18,6 +19,7 @@ import {
   Star,
   Megaphone,
   LogOut,
+  Package,   // ✅ FIXED — THIS WAS MISSING
 } from "lucide-react";
 
 const NGODashboard = () => {
@@ -30,6 +32,7 @@ const NGODashboard = () => {
     completedDonations: 0,
     assignedDonations: 0,
   });
+
   const [ngoName, setNgoName] = useState("Your NGO");
   const [recentDonations, setRecentDonations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,7 @@ const NGODashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!ngo?.id) return;
+
       setLoading(true);
 
       const { data: donations } = await supabase
@@ -49,11 +53,9 @@ const NGODashboard = () => {
       const totalValue =
         donations?.reduce((sum, d) => sum + (Number(d.amount) || 0), 0) || 0;
 
-      const pendingDonations =
-        donations?.filter((d) => d.status === "Pending").length || 0;
-      const assignedDonations =
-        donations?.filter((d) => d.status === "Assigned").length || 0;
-      const completedDonations =
+      const pending = donations?.filter((d) => d.status === "Pending").length || 0;
+      const assigned = donations?.filter((d) => d.status === "Assigned").length || 0;
+      const completed =
         donations?.filter((d) => d.status === "Completed").length || 0;
 
       const { count: volunteerCount } = await supabase
@@ -69,9 +71,7 @@ const NGODashboard = () => {
 
       const { data: recent } = await supabase
         .from("donations")
-        .select(
-          "id, donor_id, amount, category, status, created_at"
-        )
+        .select("id, donor_id, amount, category, status, created_at")
         .eq("ngo_id", ngo.id)
         .order("created_at", { ascending: false })
         .limit(5);
@@ -81,9 +81,9 @@ const NGODashboard = () => {
         totalVolunteers: volunteerCount || 0,
         activeCampaigns: campaignCount || 0,
         totalValue,
-        pendingDonations,
-        assignedDonations,
-        completedDonations,
+        pendingDonations: pending,
+        assignedDonations: assigned,
+        completedDonations: completed,
       });
 
       setRecentDonations(recent || []);
@@ -104,7 +104,7 @@ const NGODashboard = () => {
   return (
     <div className="min-h-screen flex bg-gray-100">
 
-      {/* ------------ SIDEBAR ------------ */}
+      {/* SIDEBAR */}
       <aside className="w-72 bg-white shadow-2xl p-6 fixed h-full overflow-y-auto z-10 rounded-r-3xl">
         <h2 className="text-3xl font-extrabold text-blue-600 mb-10">
           NGO Panel
@@ -117,15 +117,14 @@ const NGODashboard = () => {
               to={item.to}
               className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-blue-100 hover:text-blue-700 transition font-medium"
             >
-              <span>{item.icon}</span> {item.label}
+              {item.icon} {item.label}
             </Link>
           ))}
         </nav>
       </aside>
 
-      {/* ------------ MAIN CONTENT ------------ */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 ml-72 p-10">
-
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 text-transparent bg-clip-text">
@@ -136,7 +135,7 @@ const NGODashboard = () => {
           </p>
         </div>
 
-        {/* Stats Section */}
+        {/* Stats */}
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
           <StatCard label="Total Donations" value={stats.totalDonations} icon={<Gift />} gradient="from-blue-400 to-blue-600" />
           <StatCard label="Volunteers" value={stats.totalVolunteers} icon={<Users />} gradient="from-green-400 to-green-600" />
@@ -169,11 +168,12 @@ const NGODashboard = () => {
 
         {/* Recent Donations */}
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Recent Donations</h2>
+
         {recentDonations.length === 0 ? (
           <p className="text-gray-600">No recent donations.</p>
         ) : (
           <div className="overflow-x-auto bg-white shadow-xl rounded-xl">
-            <table className="w-full text-left rounded-xl">
+            <table className="w-full text-left">
               <thead className="bg-gray-50 text-gray-700 font-semibold">
                 <tr>
                   <th className="p-3">Category</th>
@@ -195,7 +195,6 @@ const NGODashboard = () => {
                   </tr>
                 ))}
               </tbody>
-
             </table>
           </div>
         )}
@@ -204,7 +203,8 @@ const NGODashboard = () => {
   );
 };
 
-/* STAT CARD (Large Gradient Animated) */
+/* ----------- COMPONENTS ----------------- */
+
 const StatCard = ({ label, value, icon, gradient }: any) => (
   <div className={`p-6 rounded-3xl text-white bg-gradient-to-br ${gradient} shadow-xl hover:scale-[1.03] transition`}>
     <div className="text-4xl mb-3">{icon}</div>
@@ -213,7 +213,6 @@ const StatCard = ({ label, value, icon, gradient }: any) => (
   </div>
 );
 
-/* MINI STAT */
 const MiniStat = ({ label, value, color, icon }: any) => {
   const bg = {
     yellow: "bg-yellow-100 text-yellow-700",
@@ -231,7 +230,6 @@ const MiniStat = ({ label, value, color, icon }: any) => {
   );
 };
 
-/* STATUS BADGE */
 const StatusBadge = ({ status }: any) => {
   const map: any = {
     Completed: "bg-green-100 text-green-700",
@@ -247,10 +245,12 @@ const StatusBadge = ({ status }: any) => {
   );
 };
 
-/* SIDEBAR LINKS */
+/* -------- SIDEBAR LINKS ---------- */
+
 const sidebarLinks = [
   { to: "/ngo/dashboard", label: "Dashboard", icon: <BarChart2 size={20} /> },
   { to: "/ngo/manage", label: "Manage Donations", icon: <ClipboardList size={20} /> },
+  { to: "/ngo/needs", label: "Needed Items", icon: <Package size={20} /> },
   { to: "/ngo/pending", label: "Pending Donations", icon: <Clock size={20} /> },
   { to: "/ngo/volunteers", label: "Volunteers", icon: <Users size={20} /> },
   { to: "/ngo/campaigns", label: "Campaigns", icon: <Layers size={20} /> },
@@ -260,10 +260,12 @@ const sidebarLinks = [
   { to: "/ngo/logout", label: "Logout", icon: <LogOut size={20} /> },
 ];
 
-/* QUICK ACTIONS */
+/* -------- QUICK ACTIONS ---------- */
+
 const quickLinks = [
   { to: "/ngo/create", label: "Create Campaign", bg: "bg-blue-600", icon: <PlusCircle size={26} /> },
   { to: "/ngo/manage", label: "Manage Donations", bg: "bg-green-600", icon: <ClipboardList size={26} /> },
+  { to: "/ngo/needs", label: "Needed Items", bg: "bg-orange-600", icon: <Package size={26} /> },
   { to: "/ngo/volunteers", label: "Volunteers", bg: "bg-purple-600", icon: <Users size={26} /> },
   { to: "/ngo/pending", label: "Pending", bg: "bg-yellow-500", icon: <Clock size={26} /> },
   { to: "/ngo/gallery", label: "Gallery", bg: "bg-pink-600", icon: <Image size={26} /> },
