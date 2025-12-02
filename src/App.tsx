@@ -22,7 +22,7 @@ import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
 import NGODetails from "./pages/public/NGODetails";
 import NearbyNGOsPage from "./pages/NearbyNGOs";
-
+import CategoryPage from "@/pages/categories/CategoryPage";
 // 💖 Donor Pages
 import DonorDashboard from "./pages/donor/Dashboard";
 import CreateDonation from "./pages/donor/CreateDonation";
@@ -110,6 +110,8 @@ export default function App() {
             <Route path="/nearby-ngos" element={<NearbyNGOsPage />} />
             <Route path="/ngo/:id" element={<NGODetails />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/categories/:type" element={<CategoryPage />} />
+
 
             {/* 💖 DONOR ROUTES */}
             <Route

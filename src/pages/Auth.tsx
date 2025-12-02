@@ -10,7 +10,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
 
-  // 🔹 Auto-redirect if already logged in
+  // Auto-redirect if already logged in
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const storedRole = localStorage.getItem("role");
@@ -19,28 +19,27 @@ const Auth = () => {
     }
   }, [navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // 🔹 Sign Up / Sign In Handler
-  const handleAuth = async (e: React.FormEvent) => {
+  // Sign Up / Sign In Handler
+  const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const table = `${role}s`; // admins, donors, ngos, volunteers
+    const table = `${role}s`;
 
     try {
-      if (isSignup) {
-        // 🧾 Check existing email
-        const { data: existingUser } = await supabase
+      if (isSignup && role !== "admin") {
+        // SIGNUP FOR NON-ADMIN
+        const { data: exists } = await supabase
           .from(table)
           .select("email")
           .eq("email", formData.email.trim().toLowerCase())
           .maybeSingle();
 
-        if (existingUser) throw new Error("User already exists with this email.");
+        if (exists) throw new Error("User already exists.");
 
-        // 🆕 Insert new user
         const { data, error } = await supabase
           .from(table)
           .insert({
@@ -54,32 +53,28 @@ const Auth = () => {
 
         if (error) throw error;
 
-        alert(`🎉 ${role.toUpperCase()} registered successfully! Please sign in.`);
+        alert("Account created! Please sign in.");
         setIsSignup(false);
         setFormData({ name: "", email: "", password: "" });
       } else {
-        // 🔑 Login existing user
-        const { data, error } = await supabase
+        // LOGIN
+        const { data } = await supabase
           .from(table)
           .select("*")
           .eq("email", formData.email.trim().toLowerCase())
           .eq("password", formData.password)
           .maybeSingle();
 
-        if (error || !data) throw new Error("Invalid credentials! Please try again.");
+        if (!data) throw new Error("Invalid credentials!");
 
-        // 🧠 Save user & role in localStorage
-        // 🧠 Save user & role persistently
-localStorage.setItem("user", JSON.stringify(data));
-localStorage.setItem("role", role);
-localStorage.setItem("loginTime", new Date().toISOString());
+        localStorage.setItem("user", JSON.stringify(data));
+        localStorage.setItem("role", role);
+        localStorage.setItem("loginTime", new Date().toISOString());
 
-        // 🚀 Redirect based on role
-        const dashboardPath = `/${role}/dashboard`;
-        alert(`✅ Welcome back, ${data.name}! Redirecting to your ${role} dashboard...`);
-        navigate(dashboardPath);
+        alert(`Welcome back, ${data.name}!`);
+        navigate(`/${role}/dashboard`);
       }
-    } catch (err: any) {
+    } catch (err) {
       alert(err.message || "Authentication failed!");
     } finally {
       setLoading(false);
@@ -88,6 +83,7 @@ localStorage.setItem("loginTime", new Date().toISOString());
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6">
+
       {/* Header Section */}
       <div className="w-full max-w-md mb-6 flex justify-between items-center">
         <h1 className="text-3xl font-extrabold text-blue-700 tracking-tight">DenaSetu</h1>
@@ -102,10 +98,10 @@ localStorage.setItem("loginTime", new Date().toISOString());
       {/* Auth Card */}
       <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 border border-blue-100">
         <h2 className="text-2xl font-bold text-center text-blue-700 mb-2">
-          {isSignup ? "Create Account" : "Welcome Back!"}
+          {isSignup && role !== "admin" ? "Create Account" : "Welcome Back!"}
         </h2>
         <p className="text-center text-gray-600 mb-6">
-          {isSignup
+          {isSignup && role !== "admin"
             ? "Join us and make a difference in the world."
             : "Sign in to continue your contribution."}
         </p>
@@ -115,7 +111,10 @@ localStorage.setItem("loginTime", new Date().toISOString());
           {["admin", "donor", "ngo", "volunteer"].map((r) => (
             <button
               key={r}
-              onClick={() => setRole(r)}
+              onClick={() => {
+                setRole(r);
+                if (r === "admin") setIsSignup(false); // ❌ disable signup
+              }}
               className={`w-1/4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
                 role === r
                   ? "bg-blue-600 text-white shadow-md"
@@ -127,11 +126,14 @@ localStorage.setItem("loginTime", new Date().toISOString());
           ))}
         </div>
 
-        {/* Auth Form */}
+        {/* Form */}
         <form onSubmit={handleAuth} className="space-y-4">
-          {isSignup && (
+          {/* SHOW NAME FIELD ONLY WHEN SIGNUP + NOT ADMIN */}
+          {isSignup && role !== "admin" && (
             <div>
-              <label className="block text-gray-700 font-medium mb-1">Full Name</label>
+              <label className="block text-gray-700 font-medium mb-1">
+                Full Name
+              </label>
               <input
                 type="text"
                 name="name"
@@ -180,37 +182,39 @@ localStorage.setItem("loginTime", new Date().toISOString());
               <span className="flex items-center justify-center gap-2">
                 <Loader2 className="animate-spin h-5 w-5" /> Processing...
               </span>
-            ) : isSignup ? (
+            ) : isSignup && role !== "admin" ? (
               "Sign Up"
             ) : (
               "Sign In"
             )}
           </button>
 
-          {/* Switch Auth Mode */}
-          <p className="text-center text-sm text-gray-600 mt-4">
-            {isSignup ? (
-              <>
-                Already have an account?{" "}
-                <span
-                  onClick={() => setIsSignup(false)}
-                  className="text-blue-600 hover:underline cursor-pointer"
-                >
-                  Sign In
-                </span>
-              </>
-            ) : (
-              <>
-                New here?{" "}
-                <span
-                  onClick={() => setIsSignup(true)}
-                  className="text-blue-600 hover:underline cursor-pointer"
-                >
-                  Create Account
-                </span>
-              </>
-            )}
-          </p>
+          {/* Switch Auth Mode (HIDE FOR ADMIN) */}
+          {role !== "admin" && (
+            <p className="text-center text-sm text-gray-600 mt-4">
+              {isSignup ? (
+                <>
+                  Already have an account?{" "}
+                  <span
+                    onClick={() => setIsSignup(false)}
+                    className="text-blue-600 hover:underline cursor-pointer"
+                  >
+                    Sign In
+                  </span>
+                </>
+              ) : (
+                <>
+                  New here?{" "}
+                  <span
+                    onClick={() => setIsSignup(true)}
+                    className="text-blue-600 hover:underline cursor-pointer"
+                  >
+                    Create Account
+                  </span>
+                </>
+              )}
+            </p>
+          )}
         </form>
       </div>
     </div>

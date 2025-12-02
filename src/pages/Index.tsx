@@ -56,24 +56,62 @@ const Index = () => {
             </div>
 
             {/* Quick Links */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Quick Links</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/how-it-works" className="hover:text-foreground transition-smooth">How it Works</Link></li>
-                <li><Link to="/ngo-registration" className="hover:text-foreground transition-smooth">NGO Registration</Link></li>
-                <li><Link to="/impact" className="hover:text-foreground transition-smooth">Impact Stories</Link></li>
-                <li><Link to="/volunteer" className="hover:text-foreground transition-smooth">Volunteer</Link></li>
-              </ul>
-            </div>
+            {/* Quick Links */}
+<div className="space-y-4">
+  <h4 className="font-medium">Quick Links</h4>
+  <ul className="space-y-2 text-sm text-muted-foreground">
+    
+    {/* How it Works */}
+    <li>
+      <Link
+        to="/how-it-works"
+        className="hover:text-foreground transition-smooth"
+      >
+        How it Works
+      </Link>
+    </li>
+
+    {/* NGO Registration → Redirect to Auth Page with Role */}
+    <li>
+      <Link
+        to="/auth?role=ngo"
+        className="hover:text-foreground transition-smooth"
+      >
+        NGO Registration
+      </Link>
+    </li>
+
+    {/* Impact Stories */}
+    <li>
+      <Link
+        to="/impact"
+        className="hover:text-foreground transition-smooth"
+      >
+        Impact Stories
+      </Link>
+    </li>
+
+    {/* Volunteer → Redirect to Auth Page with Role */}
+    <li>
+      <Link
+        to="/auth?role=volunteer"
+        className="hover:text-foreground transition-smooth"
+      >
+        Volunteer
+      </Link>
+    </li>
+
+  </ul>
+</div>
 
             {/* Categories */}
             <div className="space-y-4">
               <h4 className="font-medium">Categories</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/categories?type=education" className="hover:text-foreground transition-smooth">Education</Link></li>
-                <li><Link to="/categories?type=healthcare" className="hover:text-foreground transition-smooth">Healthcare</Link></li>
-                <li><Link to="/categories?type=shelter" className="hover:text-foreground transition-smooth">Shelter Support</Link></li>
-                <li><Link to="/categories?type=relief" className="hover:text-foreground transition-smooth">Emergency Relief</Link></li>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+  <li><Link to="/categories/education" className="hover:text-foreground transition-smooth">Education</Link></li>
+  <li><Link to="/categories/healthcare" className="hover:text-foreground transition-smooth">Healthcare</Link></li>
+  <li><Link to="/categories/shelter" className="hover:text-foreground transition-smooth">Shelter Support</Link></li>
+  <li><Link to="/categories/relief" className="hover:text-foreground transition-smooth">Emergency Relief</Link></li>
               </ul>
             </div>
 
