@@ -884,3 +884,50 @@ CREATE TABLE IF NOT EXISTS ngo_needs (
 ALTER TABLE ngos
 ADD COLUMN IF NOT EXISTS image_path TEXT;
 
+CREATE TABLE IF NOT EXISTS ngo_campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  goal_amount NUMERIC,
+  raised_amount NUMERIC DEFAULT 0,
+  status TEXT DEFAULT 'Active',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS campaign_donations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id UUID REFERENCES ngo_campaigns(id) ON DELETE CASCADE,
+  donor_id UUID REFERENCES donors(id) ON DELETE SET NULL,
+  amount NUMERIC NOT NULL,
+  payment_id TEXT,
+  order_id TEXT,
+  status TEXT DEFAULT 'SUCCESS',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+ALTER TABLE ngo_campaigns
+ADD COLUMN IF NOT EXISTS image_url TEXT;
+CREATE POLICY "NGO can update its own campaigns"
+ON ngo_campaigns
+FOR UPDATE
+USING ( auth.uid() = ngo_id );
+CREATE POLICY "Allow all updates temporarily"
+ON ngo_campaigns
+FOR UPDATE
+TO public
+USING (true)
+WITH CHECK (true);
+
+
+ALTER TABLE donations
+ADD COLUMN IF NOT EXISTS payment_id TEXT;
+ALTER TABLE donations
+ADD COLUMN IF NOT EXISTS donation_type TEXT
+CHECK (donation_type IN ('Pickup', 'Drop-off', 'Either'));
+
+ALTER TABLE donations
+ADD COLUMN IF NOT EXISTS pickup_latitude DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS pickup_longitude DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS pickup_accuracy DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS pickup_map_source TEXT
+  CHECK (pickup_map_source IN ('manual', 'gps', 'auto'));
