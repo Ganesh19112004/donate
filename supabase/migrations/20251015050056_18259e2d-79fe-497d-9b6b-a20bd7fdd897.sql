@@ -931,3 +931,12 @@ ADD COLUMN IF NOT EXISTS pickup_longitude DOUBLE PRECISION,
 ADD COLUMN IF NOT EXISTS pickup_accuracy DOUBLE PRECISION,
 ADD COLUMN IF NOT EXISTS pickup_map_source TEXT
   CHECK (pickup_map_source IN ('manual', 'gps', 'auto'));
+
+
+CREATE TABLE contact_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  email text NOT NULL,
+  message text NOT NULL,
+  created_at timestamptz DEFAULT now()
+);

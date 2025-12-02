@@ -23,6 +23,7 @@ import FAQ from "./pages/FAQ";
 import NGODetails from "./pages/public/NGODetails";
 import NearbyNGOsPage from "./pages/NearbyNGOs";
 import CategoryPage from "@/pages/categories/CategoryPage";
+
 // 💖 Donor Pages
 import DonorDashboard from "./pages/donor/Dashboard";
 import CreateDonation from "./pages/donor/CreateDonation";
@@ -38,6 +39,7 @@ import MessageCenter from "./pages/donor/MessageCenter";
 import FullNGOProfile from "./pages/donor/FullNGOProfile";
 import OngoingCampaigns from "./pages/donor/OngoingCampaigns";
 import DonateMoney from "@/pages/donor/DonateMoney";
+
 // 🏢 NGO Pages
 import NGODashboard from "./pages/ngo/Dashboard";
 import CreateCampaign from "./pages/ngo/CreateCampaign";
@@ -58,6 +60,9 @@ import NGONeeds from "./pages/ngo/Needs";
 import CampaignHistory from "./pages/ngo/CampaignHistory";
 import CampaignEdit from "./pages/ngo/CampaignEdit";
 import CampaignDonors from "./pages/ngo/CampaignDonors";
+
+// 🟢 NEW PAGE — NGO MONEY RECEIVED PAGE
+import MoneyReceived from "./pages/ngo/MoneyReceived";
 
 // 🤝 Volunteer Pages
 import VolunteerDashboard from "./pages/volunteer/VolunteerDashboard";
@@ -112,7 +117,6 @@ export default function App() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/categories/:type" element={<CategoryPage />} />
 
-
             {/* 💖 DONOR ROUTES */}
             <Route
               path="/donor/dashboard"
@@ -122,7 +126,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/create-donation"
               element={
@@ -131,7 +134,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/profile"
               element={
@@ -150,7 +152,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/details/:id"
               element={
@@ -159,7 +160,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/edit-donation/:id"
               element={
@@ -168,7 +168,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/messages"
               element={
@@ -177,8 +176,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* ⭐ NEW — DONOR ONGOING CAMPAIGNS */}
             <Route
               path="/donor/campaigns"
               element={
@@ -187,7 +184,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/view-ngos"
               element={
@@ -196,7 +192,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/ngo/:id"
               element={
@@ -205,7 +200,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/settings"
               element={
@@ -214,7 +208,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/favorites"
               element={
@@ -223,7 +216,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/donor/impact"
               element={
@@ -239,6 +231,16 @@ export default function App() {
               element={
                 <ProtectedRoute allowedRoles={["ngo"]}>
                   <NGODashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* 🟢 NEW ROUTE — MONEY RECEIVED PAGE */}
+            <Route
+              path="/ngo/money-received"
+              element={
+                <ProtectedRoute allowedRoles={["ngo"]}>
+                  <MoneyReceived />
                 </ProtectedRoute>
               }
             />
@@ -314,33 +316,33 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
-  path="/ngo/campaign-history/:id"
-  element={
-    <ProtectedRoute allowedRoles={["ngo"]}>
-      <CampaignHistory />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/ngo/campaign-edit/:id"
-  element={
-    <ProtectedRoute allowedRoles={["ngo"]}>
-      <CampaignEdit />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/ngo/campaign-donors/:id"
-  element={
-    <ProtectedRoute allowedRoles={["ngo"]}>
-      <CampaignDonors />
-    </ProtectedRoute>
-  }
-/>
+              path="/ngo/campaign-history/:id"
+              element={
+                <ProtectedRoute allowedRoles={["ngo"]}>
+                  <CampaignHistory />
+                </ProtectedRoute>
+              }
+            />
 
+            <Route
+              path="/ngo/campaign-edit/:id"
+              element={
+                <ProtectedRoute allowedRoles={["ngo"]}>
+                  <CampaignEdit />
+                </ProtectedRoute>
+              }
+            />
 
-
+            <Route
+              path="/ngo/campaign-donors/:id"
+              element={
+                <ProtectedRoute allowedRoles={["ngo"]}>
+                  <CampaignDonors />
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="/ngo/donation/:id"

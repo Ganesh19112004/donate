@@ -61,3 +61,17 @@ create policy "Allow delete for owner"
 on storage.objects for delete
 to authenticated
 using (bucket_id = 'ngo_images');
+
+
+-- INSERT
+CREATE POLICY "NGO upload images"
+ON storage.objects
+FOR INSERT
+TO public
+WITH CHECK (bucket_id = 'ngo_gallery_images');
+-- SELECT
+CREATE POLICY "Public read images"
+ON storage.objects
+FOR SELECT
+TO public
+USING (bucket_id = 'ngo_gallery_images');

@@ -19,7 +19,8 @@ import {
   Star,
   Megaphone,
   LogOut,
-  Package,   // ✅ FIXED — THIS WAS MISSING
+  Package,
+  IndianRupee,
 } from "lucide-react";
 
 const NGODashboard = () => {
@@ -27,7 +28,8 @@ const NGODashboard = () => {
     totalDonations: 0,
     totalVolunteers: 0,
     activeCampaigns: 0,
-    totalValue: 0,
+    totalMoneyReceived: 0,
+    moneyDonors: 0,
     pendingDonations: 0,
     completedDonations: 0,
     assignedDonations: 0,
@@ -45,30 +47,42 @@ const NGODashboard = () => {
 
       setLoading(true);
 
+      // 🟦 FETCH ALL DONATIONS OF THIS NGO
       const { data: donations } = await supabase
         .from("donations")
         .select("*")
         .eq("ngo_id", ngo.id);
 
-      const totalValue =
-        donations?.reduce((sum, d) => sum + (Number(d.amount) || 0), 0) || 0;
+      // 🟩 TOTAL COMPLETED MONEY RECEIVED
+      const totalMoneyReceived =
+        donations
+          ?.filter((d) => d.status === "Completed" && Number(d.amount) > 0)
+          .reduce((sum, d) => sum + Number(d.amount), 0) || 0;
 
+      // 🟦 Total Money Donors
+      const moneyDonors =
+        donations?.filter((d) => Number(d.amount) > 0).length || 0;
+
+      // 🟦 Regular Stats
       const pending = donations?.filter((d) => d.status === "Pending").length || 0;
       const assigned = donations?.filter((d) => d.status === "Assigned").length || 0;
       const completed =
         donations?.filter((d) => d.status === "Completed").length || 0;
 
+      // 🟩 VOLUNTEERS COUNT
       const { count: volunteerCount } = await supabase
         .from("volunteer_assignments")
         .select("volunteer_id", { count: "exact", head: true })
         .eq("ngo_id", ngo.id);
 
+      // 🟦 CAMPAIGNS COUNT
       const { count: campaignCount } = await supabase
         .from("ngo_campaigns")
         .select("id", { count: "exact", head: true })
         .eq("ngo_id", ngo.id)
         .eq("status", "Active");
 
+      // 🟦 RECENT DONATIONS LIST
       const { data: recent } = await supabase
         .from("donations")
         .select("id, donor_id, amount, category, status, created_at")
@@ -80,7 +94,8 @@ const NGODashboard = () => {
         totalDonations: donations?.length || 0,
         totalVolunteers: volunteerCount || 0,
         activeCampaigns: campaignCount || 0,
-        totalValue,
+        totalMoneyReceived,
+        moneyDonors,
         pendingDonations: pending,
         assignedDonations: assigned,
         completedDonations: completed,
@@ -140,7 +155,7 @@ const NGODashboard = () => {
           <StatCard label="Total Donations" value={stats.totalDonations} icon={<Gift />} gradient="from-blue-400 to-blue-600" />
           <StatCard label="Volunteers" value={stats.totalVolunteers} icon={<Users />} gradient="from-green-400 to-green-600" />
           <StatCard label="Active Campaigns" value={stats.activeCampaigns} icon={<ClipboardList />} gradient="from-purple-400 to-purple-600" />
-          <StatCard label="Total Value" value={`₹${stats.totalValue}`} icon={<BarChart2 />} gradient="from-orange-400 to-orange-600" />
+          <StatCard label="Money Received" value={`₹${stats.totalMoneyReceived}`} icon={<IndianRupee />} gradient="from-teal-400 to-teal-600" />
         </div>
 
         {/* Secondary Stats */}
@@ -148,6 +163,7 @@ const NGODashboard = () => {
           <MiniStat label="Pending" value={stats.pendingDonations} color="yellow" icon={<Clock />} />
           <MiniStat label="Assigned" value={stats.assignedDonations} color="indigo" icon={<Truck />} />
           <MiniStat label="Completed" value={stats.completedDonations} color="green" icon={<CheckCircle />} />
+          <MiniStat label="Money Donors" value={stats.moneyDonors} color="green" icon={<Users />} />
           <MiniStat label="Reports" value="View" color="gray" icon={<Layers />} />
         </div>
 
@@ -166,7 +182,7 @@ const NGODashboard = () => {
           ))}
         </div>
 
-        {/* Recent Donations */}
+        {/* Recent Donations Table */}
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Recent Donations</h2>
 
         {recentDonations.length === 0 ? (
@@ -250,6 +266,7 @@ const StatusBadge = ({ status }: any) => {
 const sidebarLinks = [
   { to: "/ngo/dashboard", label: "Dashboard", icon: <BarChart2 size={20} /> },
   { to: "/ngo/manage", label: "Manage Donations", icon: <ClipboardList size={20} /> },
+  { to: "/ngo/money-received", label: "Money Received", icon: <IndianRupee size={20} /> },
   { to: "/ngo/needs", label: "Needed Items", icon: <Package size={20} /> },
   { to: "/ngo/pending", label: "Pending Donations", icon: <Clock size={20} /> },
   { to: "/ngo/volunteers", label: "Volunteers", icon: <Users size={20} /> },
@@ -267,11 +284,10 @@ const quickLinks = [
   { to: "/ngo/manage", label: "Manage Donations", bg: "bg-green-600", icon: <ClipboardList size={26} /> },
   { to: "/ngo/needs", label: "Needed Items", bg: "bg-orange-600", icon: <Package size={26} /> },
   { to: "/ngo/volunteers", label: "Volunteers", bg: "bg-purple-600", icon: <Users size={26} /> },
-  { to: "/ngo/pending", label: "Pending", bg: "bg-yellow-500", icon: <Clock size={26} /> },
+  { to: "/ngo/money-received", label: "Money Received", bg: "bg-teal-600", icon: <IndianRupee size={26} /> },
   { to: "/ngo/gallery", label: "Gallery", bg: "bg-pink-600", icon: <Image size={26} /> },
   { to: "/ngo/reports", label: "Reports", bg: "bg-gray-600", icon: <FileText size={26} /> },
   { to: "/ngo/posts", label: "Announcements", bg: "bg-indigo-600", icon: <Megaphone size={26} /> },
-  { to: "/ngo/logout", label: "Logout", bg: "bg-red-600", icon: <LogOut size={26} /> },
 ];
 
 export default NGODashboard;

@@ -1,0 +1,8 @@
+1️⃣ Add all updated files
+git add .
+
+2️⃣ Commit with a message
+git commit -m "Updated NGO Dashboard and routing fixes"
+
+3️⃣ Push to GitHub (main branch)
+git push origin main
