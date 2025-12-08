@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
 
 // 🔐 Protected Route Wrapper
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -23,7 +26,7 @@ import FAQ from "./pages/FAQ";
 import NGODetails from "./pages/public/NGODetails";
 import NearbyNGOsPage from "./pages/NearbyNGOs";
 import CategoryPage from "@/pages/categories/CategoryPage";
-
+import CategoryCard from "./CategoryCard";
 // 💖 Donor Pages
 import DonorDashboard from "./pages/donor/Dashboard";
 import CreateDonation from "./pages/donor/CreateDonation";
