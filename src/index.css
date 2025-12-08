@@ -112,20 +112,6 @@ All colors MUST be HSL.
   padding-top: 40px; 
 }
 
-/* Optional: smaller on phones */
-@media (max-width: 768px) {
-  .banner {
-    min-height: 65vh;
-    padding-top: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .banner {
-    min-height: 60vh;
-    padding-top: 16px;
-  }
-}
 
 
 /* Slider Base */
