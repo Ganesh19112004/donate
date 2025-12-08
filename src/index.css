@@ -104,15 +104,12 @@ All colors MUST be HSL.
 /* Main Container */
 .banner {
   width: 100%;
-  min-height: 65vh; /* enough for carousel */
-  height: auto; /* removes empty space */
+  height: 70vh;
   position: relative;
   overflow: hidden;
   text-align: center;
-  padding-top: 40px; 
+  padding-top: 60px;
 }
-
-
 
 /* Slider Base */
 .banner .slider {
@@ -125,7 +122,6 @@ All colors MUST be HSL.
   transform-style: preserve-3d;
   will-change: transform;
   cursor: grab;
-
 }
 
 /* Cursor change */
