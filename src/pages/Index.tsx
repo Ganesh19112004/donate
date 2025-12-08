@@ -26,7 +26,10 @@ const Index = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <CategoriesSection />
+          <div className="py-6 sm:py-8 md:py-12">
+  <CategoriesSection />
+</div>
+
         </motion.div>
 
         <motion.div
