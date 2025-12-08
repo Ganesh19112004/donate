@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import NGOCard from "./NGOCard";
+import { motion } from "framer-motion";
 
-// Default images (fallback)
 import helpingHandsImage from "@/assets/ngo-helping-hands.jpg";
 import care4healthImage from "@/assets/ngo-care4health.jpg";
 import warmShelterImage from "@/assets/ngo-warm-shelter.jpg";
@@ -14,6 +14,21 @@ const fallbackImages = [
   warmShelterImage,
 ];
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
+const staggerContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      delayChildren: 0.2,
+      staggerChildren: 0.15,
+    },
+  },
+};
+
 export default function FeaturedNGOs() {
   const [ngos, setNgos] = useState<any[]>([]);
   const navigate = useNavigate();
@@ -21,7 +36,6 @@ export default function FeaturedNGOs() {
   useEffect(() => {
     loadTopNGOs();
 
-    // 🔥 REAL-TIME sync
     const channel = supabase
       .channel("featured-ngos")
       .on(
@@ -39,9 +53,6 @@ export default function FeaturedNGOs() {
     return () => supabase.removeChannel(channel);
   }, []);
 
-  // ---------------------------------------------------------
-  // 🎯 Fetch 3 Top NGOs + REAL volunteer count
-  // ---------------------------------------------------------
   const loadTopNGOs = async () => {
     const { data } = await supabase
       .from("ngos")
@@ -63,7 +74,6 @@ export default function FeaturedNGOs() {
 
     let result = data || [];
 
-    // ⭐ FETCH REAL VOLUNTEER COUNT
     const finalList = [];
     for (const ngo of result) {
       const { count } = await supabase
@@ -77,7 +87,6 @@ export default function FeaturedNGOs() {
       });
     }
 
-    // If less than 3 NGOs → use placeholders
     if (finalList.length < 3) {
       const placeholders = [
         {
@@ -118,7 +127,6 @@ export default function FeaturedNGOs() {
       finalList.push(...placeholders.slice(finalList.length));
     }
 
-    // Fill missing images
     const withImages = finalList.map((ngo, index) => ({
       ...ngo,
       image_url: ngo.image_url || fallbackImages[index],
@@ -127,7 +135,6 @@ export default function FeaturedNGOs() {
     setNgos(withImages);
   };
 
-  // 🚀 If user tries to view/donate → must be donor
   const handleClick = (ngo: any) => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -140,40 +147,55 @@ export default function FeaturedNGOs() {
   };
 
   return (
-    <section className="py-20">
+    <motion.section
+      className="py-20"
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.3 }}
+      variants={staggerContainer}
+    >
       <div className="container mx-auto px-4">
 
         {/* Heading */}
-        <div className="text-center mb-16">
+        <motion.div variants={fadeUp} className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold mb-4">
             🌟 Featured NGOs
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Explore India's top-rated, verified NGOs making real impact.
           </p>
-        </div>
+        </motion.div>
 
         {/* Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+          variants={staggerContainer}
+        >
           {ngos.map((ngo) => (
-            <NGOCard
+            <motion.div
               key={ngo.id}
-              name={ngo.name}
-              location={ngo.city}
-              description={ngo.description}
-              image={ngo.image_url}
-              verified={ngo.verified}
-              rating={ngo.rating}
-              reviews={ngo.total_reviews}
-              volunteers={ngo.volunteer_count}   // ⭐ REAL DATA
-              focus={ngo.rating >= 4.5 ? "Top Rated" : "Trusted NGO"}
-              needs={[]}
-              onClick={() => handleClick(ngo)}
-            />
+              variants={fadeUp}
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 120 }}
+            >
+              <NGOCard
+                name={ngo.name}
+                location={ngo.city}
+                description={ngo.description}
+                image={ngo.image_url}
+                verified={ngo.verified}
+                rating={ngo.rating}
+                reviews={ngo.total_reviews}
+                volunteers={ngo.volunteer_count}
+                focus={ngo.rating >= 4.5 ? "Top Rated" : "Trusted NGO"}
+                needs={[]}
+                onClick={() => handleClick(ngo)}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
       </div>
-    </section>
+    </motion.section>
   );
 }
