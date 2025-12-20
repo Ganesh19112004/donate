@@ -940,3 +940,42 @@ CREATE TABLE contact_messages (
   message text NOT NULL,
   created_at timestamptz DEFAULT now()
 );
+
+
+ALTER TABLE donors
+ADD COLUMN IF NOT EXISTS auth_id UUID UNIQUE;
+
+ALTER TABLE volunteers
+ADD COLUMN IF NOT EXISTS auth_id UUID UNIQUE;
+
+ALTER TABLE donors
+ADD COLUMN IF NOT EXISTS provider TEXT DEFAULT 'email';
+
+ALTER TABLE volunteers
+ADD COLUMN IF NOT EXISTS provider TEXT DEFAULT 'email';
+
+ALTER TABLE donors ALTER COLUMN password DROP NOT NULL;
+ALTER TABLE volunteers ALTER COLUMN password DROP NOT NULL;
+
+-- Allow NGO to upload images
+CREATE POLICY "Allow NGO uploads"
+ON storage.objects
+FOR INSERT
+TO public
+WITH CHECK (bucket_id = 'ngo_images');
+
+-- Allow NGO to update/delete own images
+CREATE POLICY "Allow NGO deletes"
+ON storage.objects
+FOR DELETE
+TO public
+USING (bucket_id = 'ngo_images');
+
+-- Allow public read
+CREATE POLICY "Allow public read"
+ON storage.objects
+FOR SELECT
+TO public
+USING (bucket_id = 'ngo_images');
+ALTER TABLE ngos
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();

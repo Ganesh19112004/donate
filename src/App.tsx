@@ -63,7 +63,7 @@ import NGONeeds from "./pages/ngo/Needs";
 import CampaignHistory from "./pages/ngo/CampaignHistory";
 import CampaignEdit from "./pages/ngo/CampaignEdit";
 import CampaignDonors from "./pages/ngo/CampaignDonors";
-
+import AuthCallback from "./pages/AuthCallback";  
 // 🟢 NEW PAGE — NGO MONEY RECEIVED PAGE
 import MoneyReceived from "./pages/ngo/MoneyReceived";
 
@@ -119,6 +119,8 @@ export default function App() {
             <Route path="/ngo/:id" element={<NGODetails />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/categories/:type" element={<CategoryPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+
 
             {/* 💖 DONOR ROUTES */}
             <Route
