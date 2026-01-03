@@ -979,3 +979,56 @@ TO public
 USING (bucket_id = 'ngo_images');
 ALTER TABLE ngos
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+create table volunteer_live_location (
+  id uuid default gen_random_uuid() primary key,
+  volunteer_id uuid references volunteers(id),
+  assignment_id uuid references volunteer_assignments(id),
+  latitude double precision,
+  longitude double precision,
+  accuracy double precision,
+  updated_at timestamptz default now()
+);
+create table assignment_events (
+  id uuid default gen_random_uuid() primary key,
+  assignment_id uuid,
+  event text,
+  note text,
+  created_at timestamptz default now()
+);
+ALTER TABLE volunteer_assignments
+DROP CONSTRAINT IF EXISTS volunteer_assignments_status_check;
+
+ALTER TABLE volunteer_assignments
+ADD CONSTRAINT volunteer_assignments_status_check
+CHECK (
+  status IN ('Assigned','Accepted','In Progress','Delivered','Cancelled')
+);
+ALTER TABLE donations
+DROP CONSTRAINT IF EXISTS donations_status_check;
+
+ALTER TABLE donations
+ADD CONSTRAINT donations_status_check
+CHECK (
+  status IN (
+    'Pending',
+    'Accepted',
+    'Assigned',
+    'In Progress',
+    'Delivered',
+    'Completed',
+    'Cancelled'
+  )
+);
+create table public.volunteer_location_logs (
+  id uuid primary key default gen_random_uuid(),
+  assignment_id uuid references volunteer_assignments(id) on delete cascade,
+  volunteer_id uuid references volunteers(id) on delete cascade,
+  latitude double precision not null,
+  longitude double precision not null,
+  accuracy double precision,
+  recorded_at timestamp without time zone default now()
+);
+alter table volunteer_assignments
+add column delivered_latitude double precision,
+add column delivered_longitude double precision;

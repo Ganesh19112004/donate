@@ -75,3 +75,8 @@ ON storage.objects
 FOR SELECT
 TO public
 USING (bucket_id = 'ngo_gallery_images');
+
+create policy "Volunteer can update own location"
+on volunteer_live_location
+for all
+using (auth.uid() = volunteer_id);
