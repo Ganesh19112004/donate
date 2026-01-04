@@ -3,37 +3,77 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+
     <title>DenaSetu – Connecting Donors & NGOs</title>
 
     <!-- SEO Meta -->
-    <meta name="description" content="DenaSetu - A platform that connects donors with NGOs and volunteers to make impact easy." />
-    <meta name="keywords" content="donation, ngo, charity, fundraising, campaigns, social work, denasetu" />
+    <meta
+      name="description"
+      content="DenaSetu - A platform that connects donors with NGOs and volunteers to make impact easy."
+    />
+    <meta
+      name="keywords"
+      content="donation, ngo, charity, fundraising, campaigns, social work, denasetu"
+    />
     <meta name="author" content="DenaSetu Team" />
 
-    <!-- Open Graph (Facebook, LinkedIn) -->
+    <!-- Open Graph -->
     <meta property="og:title" content="DenaSetu – Connecting Donors & NGOs" />
-    <meta property="og:description" content="Donate easily, support NGO campaigns, track your impact." />
+    <meta
+      property="og:description"
+      content="Donate easily, support NGO campaigns, track your impact."
+    />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/denasetu-banner.png" />
-    <meta property="og:url" content="https://your-domain.com" />
+    <meta property="og:url" content="https://denasetu.vercel.app" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="DenaSetu – Donate & Support NGOs" />
-    <meta name="twitter:description" content="A smart donation platform for campaigns, NGOs & volunteers." />
+    <meta
+      name="twitter:description"
+      content="A smart donation platform for campaigns, NGOs & volunteers."
+    />
     <meta name="twitter:image" content="/denasetu-banner.png" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png" />
 
-    <!-- Razorpay Checkout Script (Required) -->
+    <!-- Razorpay -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
   </head>
 
   <body>
     <div id="root"></div>
+
+    <!-- React entry -->
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- ✅ Botpress Chatbot (FINAL, SAFE, RAZORPAY-COMPATIBLE) -->
+    <script>
+      (function () {
+        const script = document.createElement("script");
+        script.src = "https://cdn.botpress.cloud/webchat/v3.5/inject.js";
+        script.async = true;
+
+        script.onload = function () {
+          window.botpressWebChat.init({
+            configUrl:
+              "https://files.bpcontent.cloud/2026/01/04/07/20260104074144-XBKL5RW2.json",
+
+            showPoweredBy: false,
+            openOnLoad: false,
+
+            stylesheet: `
+              .bpw-widget-container {
+                z-index: 2147483648 !important;
+              }
+            `
+          });
+        };
+
+        document.body.appendChild(script);
+      })();
+    </script>
   </body>
 </html>

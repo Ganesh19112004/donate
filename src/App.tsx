@@ -27,6 +27,7 @@ import NGODetails from "./pages/public/NGODetails";
 import NearbyNGOsPage from "./pages/NearbyNGOs";
 import CategoryPage from "@/pages/categories/CategoryPage";
 import CategoryCard from "./CategoryCard";
+import Chatbot from "@/components/Chatbot";
 // 💖 Donor Pages
 import DonorDashboard from "./pages/donor/Dashboard";
 import CreateDonation from "./pages/donor/CreateDonation";
@@ -103,6 +104,7 @@ export default function App() {
         <Sonner />
 
         <BrowserRouter>
+        <Chatbot />
           <Routes>
 
             {/* 🌍 PUBLIC ROUTES */}
@@ -578,6 +580,7 @@ export default function App() {
 
             {/* 🚫 404 PAGE */}
             <Route path="*" element={<NotFound />} />
+            
 
           </Routes>
         </BrowserRouter>
