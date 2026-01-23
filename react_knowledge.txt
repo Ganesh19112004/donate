@@ -1,0 +1,7367 @@
+{
+    console.log("✅ DenaSetu App Initialized");
+  }, []);
+
+  return (
+
+{/* 🌍 PUBLIC ROUTES */}
+
+{/* 💖 DONOR ROUTES */}
+
+{/* 🏢 NGO ROUTES */}
+
+{/* 🟢 NEW ROUTE — MONEY RECEIVED PAGE */}
+
+{/* 🤝 VOLUNTEER ROUTES */}
+
+{/* 👑 ADMIN ROUTES */}
+
+{/* 🚫 404 PAGE */}
+
+{
+  const sliderRef = useRef
+
+(autoRotate.current = true), 1000);
+
+  const categories = [
+    { title: "Clothing", description: "Donate clothes", icon: Shirt, itemCount: 150, urgency: "medium" },
+    { title: "Education Supplies", description: "School needs", icon: Book, itemCount: 280, urgency: "high" },
+    { title: "Healthcare & Hygiene", description: "Sanitary kits", icon: Stethoscope, itemCount: 95, urgency: "high" },
+    { title: "Shelter Support", description: "Blankets & tents", icon: Home, itemCount: 67, urgency: "medium" },
+    { title: "Financial Contributions", description: "Monetary support", icon: Banknote, itemCount: 45, urgency: "low" },
+    { title: "Other Essentials", description: "Tools and utensils", icon: Package, itemCount: 123, urgency: "low" },
+  ];
+
+  return (
+
+{
+  const urgencyColors = {
+    high: "border-destructive bg-destructive/5",
+    medium: "border-secondary bg-secondary-light",
+    low: "border-accent bg-accent",
+  };
+
+  const urgencyBadges = {
+    high: "bg-destructive text-destructive-foreground",
+    medium: "bg-secondary text-secondary-foreground",
+    low: "bg-accent-foreground text-accent",
+  };
+
+  return (
+
+{/* ICON */}
+
+{/* BADGE */}
+
+{itemCount} needed
+
+{title}
+
+{description}
+
+Urgency
+
+{urgency}
+
+{
+  const [open, setOpen] = useState(false);
+
+  return (
+
+{/* 🔵 Floating Chat Button */}
+      {!open && (
+
+)}
+
+      {/* 🟢 Chat Window */}
+      {open && (
+
+{/* 🔷 Header */}
+
+DenaSetu Assistant
+
+Online • AI Support
+
+{/* 🧠 Chatbot iframe */}
+
+{/* 🔻 Footer */}
+
+Powered by DenaSetu AI • Do not share OTP or payment details
+
+{
+    const { data } = await supabase
+      .from("ngos")
+      .select(`
+        id,
+        name,
+        city,
+        state,
+        description,
+        verified,
+        rating,
+        total_reviews,
+        image_url
+      `)
+      .order("verified", { ascending: false })
+      .order("rating", { ascending: false })
+      .order("total_reviews", { ascending: false })
+      .limit(3);
+
+    let result = data || [];
+
+    const finalList = [];
+    for (const ngo of result) {
+      const { count } = await supabase
+        .from("ngo_volunteers")
+        .select("volunteer_id", { count: "exact", head: true })
+        .eq("ngo_id", ngo.id);
+
+      finalList.push({
+        ...ngo,
+        volunteer_count: count || 0,
+      });
+    }
+
+    if (finalList.length
+
+{
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (!user?.role || user.role !== "donor") {
+      navigate("/auth?role=donor&redirect=/ngo/" + ngo.id);
+      return;
+    }
+
+    navigate("/ngo/" + ngo.id);
+  };
+
+  return (
+
+{/* Heading */}
+
+🌟 Featured NGOs
+
+Explore India's top-rated, verified NGOs making real impact.
+
+{/* Cards */}
+
+{
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [role, setRole] = useState
+
+(null);
+  const [userName, setUserName] = useState
+
+{
+    localStorage.clear();
+    setIsLoggedIn(false);
+    setRole(null);
+    toast({ title: "Logged out successfully!" });
+    navigate("/", { replace: true });
+    window.location.reload();
+  };
+
+  return (
+
+{/* LOGO */}
+
+DenaSetu
+
+{/* DESKTOP NAV */}
+
+{label}
+
+              {/* underline animation */}
+
+))}
+
+          {/* LOGGED IN */}
+          {isLoggedIn ? (
+
+Dashboard
+
+Logout
+
+) : (
+
+Sign In
+
+{/* MOBILE TOGGLE */}
+
+{isMenuOpen ?
+
+{/* MOBILE MENU WITH ANIMATION */}
+
+{isMenuOpen && (
+
+{label}
+
+))}
+
+              {isLoggedIn ? (
+
+{userName}
+
+{
+        if (ngo.city) set.add(ngo.city.trim().toLowerCase());
+        return set;
+      }, new Set()) || new Set();
+
+    setStats({
+      totalDonations: donations?.length || 0,
+      partnerNGOs: ngos?.length || 0,
+      totalDonors: donors?.length || 0,
+      totalVolunteers: volunteers?.length || 0,
+      totalCities: uniqueCities.size || 0,
+    });
+  };
+
+  return (
+
+{/* LEFT */}
+
+Connecting you to
+
+local NGOs
+
+that need your help
+
+Make a direct impact in your community by donating exactly what NGOs need most.
+                Every contribution matters—big or small.
+
+{/* BUTTONS */}
+
+Start Donating
+
+Find Nearby NGOs
+
+{/* STATS */}
+
+{item.value}+
+
+{item.label}
+
+{/* IMAGE */}
+
+{
+  const [campaigns, setCampaigns] = useState
+
+{
+    const donor = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (!donor?.role || donor.role !== "donor") {
+      navigate("/auth?redirect=campaign&campaign_id=" + campaign.id);
+      return;
+    }
+
+    navigate("/donor/donate-campaign/" + campaign.id);
+  };
+
+  return (
+
+❤️ Ongoing Campaigns
+
+Support fundraising campaigns from NGOs making real impact right now.
+
+{/* No Campaigns */}
+        {campaigns.length === 0 ? (
+
+No active campaigns right now.
+
+0
+                  ? Math.min((c.raised_amount / c.goal_amount) * 100, 100)
+                  : 0;
+
+              return (
+
+{/* Campaign Image */}
+                  {c.image_url && (
+
+)}
+
+                  {/* Content */}
+
+{c.title}
+
+{c.description}
+
+{c.ngos?.name}
+
+{/* Progress Bar */}
+
+Raised: ₹{c.raised_amount} / ₹{c.goal_amount}
+
+{/* Donate Button */}
+
+Donate Now
+
+);
+            })}
+
+(null);
+  const [role, setRole] = useState
+
+{
+    if (role === "admin") return "/admin";
+    if (role === "ngo") return "/ngo/dashboard";
+    if (role === "donor") return "/donor/dashboard";
+    if (role === "volunteer") return "/volunteer/dashboard";
+    return "/";
+  };
+
+  return (
+
+DonateConnect
+
+{/* RIGHT SIDE */}
+
+{user ? (
+
+{/* Dashboard */}
+
+{/* ROLE SPECIFIC */}
+                {role === "donor" && (
+
+Create Donation
+
+My Donations
+
+)}
+
+                {role === "ngo" && (
+
+Profile
+
+)}
+
+                {role === "admin" && (
+
+Admin
+
+)}
+
+                {/* USER MENU */}
+
+{dropdownOpen && (
+
+Sign In / Sign Up
+
+{
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${ngo.latitude},${ngo.longitude}`;
+    window.open(url, "_blank");
+  };
+
+  return (
+
+{/* HEADER */}
+
+🌍 NGOs Near You
+
+We detect your location & sort NGOs automatically by nearest.
+
+{/* FILTER BAR */}
+
+Nearest
+
+Top Rated
+
+Most Reviewed
+
+{/* LIST */}
+
+{ngo.name}
+                        {ngo.verified && (
+
+✔ Verified
+
+{ngo.city}
+
+{ngo.description}
+
+{/* Stats */}
+
+{ngo.total_reviews} reviews
+
+{ngo.rating && (
+
+⭐ {ngo.rating}/5
+
+Updated recently
+
+{/* Distance */}
+                      {ngo.distance && (
+
+📍 {ngo.distance.toFixed(2)} km away
+
+{/* RIGHT BUTTONS */}
+
+Directions
+
+View Details
+
+{/* View All */}
+
+View All Nearby NGOs
+
+{
+  return (
+
+{/* 🔥 IMAGE AREA */}
+
+{/* DARK GRADIENT */}
+
+{/* VERIFIED BADGE */}
+          {verified && (
+
+Verified NGO
+
+)}
+
+          {/* TITLE */}
+
+{name}
+
+{location}
+
+{/* 🔥 CONTENT */}
+
+{focus}
+
+{volunteers} volunteers
+
+{/* DESCRIPTION */}
+
+{/* NEEDS */}
+
+Current Needs
+
+Updated today
+
+{need.emoji}
+
+{need.item}
+
+{need.quantity}
+
+{/* CTA Button */}
+
+View & Donate
+
+{children}
+
+{
+  const [isAuthenticated, setIsAuthenticated] = useState
+
+clearTimeout(timer);
+  }, [allowedRoles]);
+
+  // LOADING STATE WITH ANIMATION
+  if (isAuthenticated === null) {
+    return (
+
+Checking permissions...
+
+);
+  }
+
+  // NOT ALLOWED → Redirect to auth and keep original page
+  if (!isAuthenticated) {
+    return (
+
+);
+  }
+
+  // AUTHENTICATED → Render page with fade-in
+  return (
+
+,
+  React.ComponentPropsWithoutRef
+
+));
+AccordionItem.displayName = "AccordionItem";
+
+const AccordionTrigger = React.forwardRef
+
+));
+AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
+
+const AccordionContent = React.forwardRef
+
+));
+AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
+
+const AlertDialogContent = React.forwardRef
+
+));
+AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
+
+const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes
+
+);
+AlertDialogHeader.displayName = "AlertDialogHeader";
+
+const AlertDialogFooter = ({ className, ...props }: React.HTMLAttributes
+
+);
+AlertDialogFooter.displayName = "AlertDialogFooter";
+
+const AlertDialogTitle = React.forwardRef
+
+));
+AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName;
+
+const AlertDialogDescription = React.forwardRef
+
+));
+AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
+
+const AlertDialogAction = React.forwardRef
+
+));
+AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
+
+const AlertDialogCancel = React.forwardRef
+
+svg]:text-destructive",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+const Alert = React.forwardRef
+
+& VariantProps
+
+));
+Alert.displayName = "Alert";
+
+const AlertTitle = React.forwardRef
+
+),
+);
+AlertTitle.displayName = "AlertTitle";
+
+const AlertDescription = React.forwardRef
+
+));
+Avatar.displayName = AvatarPrimitive.Root.displayName;
+
+const AvatarImage = React.forwardRef
+
+));
+AvatarImage.displayName = AvatarPrimitive.Image.displayName;
+
+const AvatarFallback = React.forwardRef
+
+, VariantProps
+
+{}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return
+
+);
+Breadcrumb.displayName = "Breadcrumb";
+
+const BreadcrumbList = React.forwardRef
+
+),
+);
+BreadcrumbList.displayName = "BreadcrumbList";
+
+const BreadcrumbItem = React.forwardRef
+
+),
+);
+BreadcrumbItem.displayName = "BreadcrumbItem";
+
+const BreadcrumbLink = React.forwardRef
+
+{
+  const Comp = asChild ? Slot : "a";
+
+  return
+
+;
+});
+BreadcrumbLink.displayName = "BreadcrumbLink";
+
+const BreadcrumbPage = React.forwardRef
+
+),
+);
+BreadcrumbPage.displayName = "BreadcrumbPage";
+
+const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentProps
+
+{children ??
+
+);
+BreadcrumbSeparator.displayName = "BreadcrumbSeparator";
+
+const BreadcrumbEllipsis = ({ className, ...props }: React.ComponentProps
+
+More
+
+,
+    VariantProps
+
+{
+  asChild?: boolean
+}
+
+const Button = React.forwardRef
+
+{
+    const Comp = asChild ? Slot : "button"
+    return (
+
+{
+  asChild?: boolean;
+}
+
+const Button = React.forwardRef
+
+{
+    const Comp = asChild ? Slot : "button";
+    return
+
+;
+
+function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+  return (
+
+));
+Card.displayName = "Card";
+
+const CardHeader = React.forwardRef
+
+),
+);
+CardHeader.displayName = "CardHeader";
+
+const CardTitle = React.forwardRef
+
+),
+);
+CardTitle.displayName = "CardTitle";
+
+const CardDescription = React.forwardRef
+
+),
+);
+CardDescription.displayName = "CardDescription";
+
+const CardContent = React.forwardRef
+
+,
+);
+CardContent.displayName = "CardContent";
+
+const CardFooter = React.forwardRef
+
+void;
+};
+
+type CarouselContextProps = {
+  carouselRef: ReturnType
+
+[0];
+  api: ReturnType
+
+void;
+  canScrollPrev: boolean;
+  canScrollNext: boolean;
+} & CarouselProps;
+
+const CarouselContext = React.createContext
+
+(null);
+
+function useCarousel() {
+  const context = React.useContext(CarouselContext);
+
+  if (!context) {
+    throw new Error("useCarousel must be used within a
+
+");
+  }
+
+  return context;
+}
+
+const Carousel = React.forwardRef
+
+{
+      api?.scrollNext();
+    }, [api]);
+
+    const handleKeyDown = React.useCallback(
+      (event: React.KeyboardEvent
+
+{
+        api?.off("select", onSelect);
+      };
+    }, [api, onSelect]);
+
+    return (
+
+);
+  },
+);
+Carousel.displayName = "Carousel";
+
+const CarouselContent = React.forwardRef
+
+{
+    const { carouselRef, orientation } = useCarousel();
+
+    return (
+
+);
+  },
+);
+CarouselContent.displayName = "CarouselContent";
+
+const CarouselItem = React.forwardRef
+
+{
+    const { orientation } = useCarousel();
+
+    return (
+
+);
+  },
+);
+CarouselItem.displayName = "CarouselItem";
+
+const CarouselPrevious = React.forwardRef
+
+{
+    const { orientation, scrollPrev, canScrollPrev } = useCarousel();
+
+    return (
+
+Previous slide
+
+);
+  },
+);
+CarouselPrevious.displayName = "CarouselPrevious";
+
+const CarouselNext = React.forwardRef
+
+{
+    const { orientation, scrollNext, canScrollNext } = useCarousel();
+
+    return (
+
+Next slide
+
+});
+};
+
+type ChartContextProps = {
+  config: ChartConfig;
+};
+
+const ChartContext = React.createContext
+
+(null);
+
+function useChart() {
+  const context = React.useContext(ChartContext);
+
+  if (!context) {
+    throw new Error("useChart must be used within a
+
+");
+  }
+
+  return context;
+}
+
+const ChartContainer = React.forwardRef
+
+& {
+    config: ChartConfig;
+    children: React.ComponentProps
+
+{
+  const uniqueId = React.useId();
+  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
+
+  return (
+
+config.theme || config.color);
+
+  if (!colorConfig.length) {
+    return null;
+  }
+
+  return (
+
+);
+};
+
+const ChartTooltip = RechartsPrimitive.Tooltip;
+
+const ChartTooltipContent = React.forwardRef
+
+&
+    React.ComponentProps
+
+{
+      if (hideLabel || !payload?.length) {
+        return null;
+      }
+
+      const [item] = payload;
+      const key = `${labelKey || item.dataKey || item.name || "value"}`;
+      const itemConfig = getPayloadConfigFromPayload(config, item, key);
+      const value =
+        !labelKey && typeof label === "string"
+          ? config[label as keyof typeof config]?.label || label
+          : itemConfig?.label;
+
+      if (labelFormatter) {
+        return
+
+{labelFormatter(value, payload)}
+
+;
+      }
+
+      if (!value) {
+        return null;
+      }
+
+      return
+
+{value}
+
+;
+    }, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey]);
+
+    if (!active || !payload?.length) {
+      return null;
+    }
+
+    const nestLabel = payload.length === 1 && indicator !== "dot";
+
+    return (
+
+{!nestLabel ? tooltipLabel : null}
+
+{
+            const key = `${nameKey || item.name || item.dataKey || "value"}`;
+            const itemConfig = getPayloadConfigFromPayload(config, item, key);
+            const indicatorColor = color || item.payload.fill || item.color;
+
+            return (
+
+{formatter && item?.value !== undefined && item.name ? (
+                  formatter(item.value, item.name, item, index, item.payload)
+                ) : (
+
+{itemConfig?.icon ? (
+
+) : (
+                      !hideIndicator && (
+
+)
+                    )}
+
+{nestLabel ? tooltipLabel : null}
+
+{itemConfig?.label || item.name}
+
+{item.value && (
+
+{item.value.toLocaleString()}
+
+);
+          })}
+
+);
+  },
+);
+ChartTooltipContent.displayName = "ChartTooltip";
+
+const ChartLegend = RechartsPrimitive.Legend;
+
+const ChartLegendContent = React.forwardRef
+
+&
+    Pick
+
+{
+  const { config } = useChart();
+
+  if (!payload?.length) {
+    return null;
+  }
+
+  return (
+
+{
+        const key = `${nameKey || item.dataKey || "value"}`;
+        const itemConfig = getPayloadConfigFromPayload(config, item, key);
+
+        return (
+
+{itemConfig?.icon && !hideIcon ? (
+
+)}
+            {itemConfig?.label}
+
+);
+      })}
+
+);
+};
+
+const CommandInput = React.forwardRef
+
+));
+
+CommandInput.displayName = CommandPrimitive.Input.displayName;
+
+const CommandList = React.forwardRef
+
+));
+
+CommandList.displayName = CommandPrimitive.List.displayName;
+
+const CommandEmpty = React.forwardRef
+
+);
+
+CommandEmpty.displayName = CommandPrimitive.Empty.displayName;
+
+const CommandGroup = React.forwardRef
+
+));
+
+CommandGroup.displayName = CommandPrimitive.Group.displayName;
+
+const CommandSeparator = React.forwardRef
+
+));
+CommandSeparator.displayName = CommandPrimitive.Separator.displayName;
+
+const CommandItem = React.forwardRef
+
+));
+
+CommandItem.displayName = CommandPrimitive.Item.displayName;
+
+const CommandShortcut = ({ className, ...props }: React.HTMLAttributes
+
+{
+  return
+
+));
+ContextMenuSubTrigger.displayName = ContextMenuPrimitive.SubTrigger.displayName;
+
+const ContextMenuSubContent = React.forwardRef
+
+));
+ContextMenuSubContent.displayName = ContextMenuPrimitive.SubContent.displayName;
+
+const ContextMenuContent = React.forwardRef
+
+));
+ContextMenuContent.displayName = ContextMenuPrimitive.Content.displayName;
+
+const ContextMenuItem = React.forwardRef
+
+));
+ContextMenuItem.displayName = ContextMenuPrimitive.Item.displayName;
+
+const ContextMenuCheckboxItem = React.forwardRef
+
+));
+ContextMenuCheckboxItem.displayName = ContextMenuPrimitive.CheckboxItem.displayName;
+
+const ContextMenuRadioItem = React.forwardRef
+
+));
+ContextMenuRadioItem.displayName = ContextMenuPrimitive.RadioItem.displayName;
+
+const ContextMenuLabel = React.forwardRef
+
+));
+ContextMenuLabel.displayName = ContextMenuPrimitive.Label.displayName;
+
+const ContextMenuSeparator = React.forwardRef
+
+));
+ContextMenuSeparator.displayName = ContextMenuPrimitive.Separator.displayName;
+
+const ContextMenuShortcut = ({ className, ...props }: React.HTMLAttributes
+
+));
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
+
+const DialogContent = React.forwardRef
+
+Close
+
+));
+DialogContent.displayName = DialogPrimitive.Content.displayName;
+
+const DialogHeader = ({ className, ...props }: React.HTMLAttributes
+
+);
+DialogHeader.displayName = "DialogHeader";
+
+const DialogFooter = ({ className, ...props }: React.HTMLAttributes
+
+);
+DialogFooter.displayName = "DialogFooter";
+
+const DialogTitle = React.forwardRef
+
+));
+DialogTitle.displayName = DialogPrimitive.Title.displayName;
+
+const DialogDescription = React.forwardRef
+
+);
+Drawer.displayName = "Drawer";
+
+const DrawerTrigger = DrawerPrimitive.Trigger;
+
+const DrawerPortal = DrawerPrimitive.Portal;
+
+const DrawerClose = DrawerPrimitive.Close;
+
+const DrawerOverlay = React.forwardRef
+
+));
+DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
+
+const DrawerContent = React.forwardRef
+
+));
+DrawerContent.displayName = "DrawerContent";
+
+const DrawerHeader = ({ className, ...props }: React.HTMLAttributes
+
+);
+DrawerHeader.displayName = "DrawerHeader";
+
+const DrawerFooter = ({ className, ...props }: React.HTMLAttributes
+
+);
+DrawerFooter.displayName = "DrawerFooter";
+
+const DrawerTitle = React.forwardRef
+
+));
+DrawerTitle.displayName = DrawerPrimitive.Title.displayName;
+
+const DrawerDescription = React.forwardRef
+
+));
+DropdownMenuSubTrigger.displayName = DropdownMenuPrimitive.SubTrigger.displayName;
+
+const DropdownMenuSubContent = React.forwardRef
+
+));
+DropdownMenuSubContent.displayName = DropdownMenuPrimitive.SubContent.displayName;
+
+const DropdownMenuContent = React.forwardRef
+
+));
+DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
+
+const DropdownMenuItem = React.forwardRef
+
+));
+DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
+
+const DropdownMenuCheckboxItem = React.forwardRef
+
+));
+DropdownMenuCheckboxItem.displayName = DropdownMenuPrimitive.CheckboxItem.displayName;
+
+const DropdownMenuRadioItem = React.forwardRef
+
+));
+DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName;
+
+const DropdownMenuLabel = React.forwardRef
+
+));
+DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
+
+const DropdownMenuSeparator = React.forwardRef
+
+));
+DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName;
+
+const DropdownMenuShortcut = ({ className, ...props }: React.HTMLAttributes
+
+= FieldPath
+
+= {
+  name: TName;
+};
+
+const FormFieldContext = React.createContext
+
+({} as FormFieldContextValue);
+
+const FormField =
+
+({
+  ...props
+}: ControllerProps
+
+{
+  const fieldContext = React.useContext(FormFieldContext);
+  const itemContext = React.useContext(FormItemContext);
+  const { getFieldState, formState } = useFormContext();
+
+  const fieldState = getFieldState(fieldContext.name, formState);
+
+  if (!fieldContext) {
+    throw new Error("useFormField should be used within
+
+");
+  }
+
+  const { id } = itemContext;
+
+  return {
+    id,
+    name: fieldContext.name,
+    formItemId: `${id}-form-item`,
+    formDescriptionId: `${id}-form-item-description`,
+    formMessageId: `${id}-form-item-message`,
+    ...fieldState,
+  };
+};
+
+type FormItemContextValue = {
+  id: string;
+};
+
+const FormItemContext = React.createContext
+
+({} as FormItemContextValue);
+
+const FormItem = React.forwardRef
+
+{
+    const id = React.useId();
+
+    return (
+
+);
+  },
+);
+FormItem.displayName = "FormItem";
+
+const FormLabel = React.forwardRef
+
+{
+  const { error, formItemId } = useFormField();
+
+  return
+
+;
+});
+FormLabel.displayName = "FormLabel";
+
+const FormControl = React.forwardRef
+
+, React.ComponentPropsWithoutRef
+
+{
+    const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+
+    return (
+
+);
+  },
+);
+FormControl.displayName = "FormControl";
+
+const FormDescription = React.forwardRef
+
+{
+    const { formDescriptionId } = useFormField();
+
+    return
+
+;
+  },
+);
+FormDescription.displayName = "FormDescription";
+
+const FormMessage = React.forwardRef
+
+{
+    const { error, formMessageId } = useFormField();
+    const body = error ? String(error?.message) : children;
+
+    if (!body) {
+      return null;
+    }
+
+    return (
+
+{body}
+
+),
+);
+InputOTP.displayName = "InputOTP";
+
+const InputOTPGroup = React.forwardRef
+
+,
+);
+InputOTPGroup.displayName = "InputOTPGroup";
+
+const InputOTPSlot = React.forwardRef
+
+{
+  const inputOTPContext = React.useContext(OTPInputContext);
+  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
+
+  return (
+
+{char}
+      {hasFakeCaret && (
+
+);
+});
+InputOTPSlot.displayName = "InputOTPSlot";
+
+const InputOTPSeparator = React.forwardRef
+
+{
+    return (
+
+));
+Menubar.displayName = MenubarPrimitive.Root.displayName;
+
+const MenubarTrigger = React.forwardRef
+
+));
+MenubarTrigger.displayName = MenubarPrimitive.Trigger.displayName;
+
+const MenubarSubTrigger = React.forwardRef
+
+));
+MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName;
+
+const MenubarSubContent = React.forwardRef
+
+));
+MenubarSubContent.displayName = MenubarPrimitive.SubContent.displayName;
+
+const MenubarContent = React.forwardRef
+
+));
+MenubarContent.displayName = MenubarPrimitive.Content.displayName;
+
+const MenubarItem = React.forwardRef
+
+));
+MenubarItem.displayName = MenubarPrimitive.Item.displayName;
+
+const MenubarCheckboxItem = React.forwardRef
+
+));
+MenubarCheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName;
+
+const MenubarRadioItem = React.forwardRef
+
+));
+MenubarRadioItem.displayName = MenubarPrimitive.RadioItem.displayName;
+
+const MenubarLabel = React.forwardRef
+
+));
+MenubarLabel.displayName = MenubarPrimitive.Label.displayName;
+
+const MenubarSeparator = React.forwardRef
+
+));
+MenubarSeparator.displayName = MenubarPrimitive.Separator.displayName;
+
+const MenubarShortcut = ({ className, ...props }: React.HTMLAttributes
+
+));
+NavigationMenu.displayName = NavigationMenuPrimitive.Root.displayName;
+
+const NavigationMenuList = React.forwardRef
+
+));
+NavigationMenuList.displayName = NavigationMenuPrimitive.List.displayName;
+
+const NavigationMenuItem = NavigationMenuPrimitive.Item;
+
+const navigationMenuTriggerStyle = cva(
+  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
+);
+
+const NavigationMenuTrigger = React.forwardRef
+
+{children}{" "}
+
+));
+NavigationMenuTrigger.displayName = NavigationMenuPrimitive.Trigger.displayName;
+
+const NavigationMenuContent = React.forwardRef
+
+));
+NavigationMenuContent.displayName = NavigationMenuPrimitive.Content.displayName;
+
+const NavigationMenuLink = NavigationMenuPrimitive.Link;
+
+const NavigationMenuViewport = React.forwardRef
+
+));
+NavigationMenuViewport.displayName = NavigationMenuPrimitive.Viewport.displayName;
+
+const NavigationMenuIndicator = React.forwardRef
+
+);
+Pagination.displayName = "Pagination";
+
+const PaginationContent = React.forwardRef
+
+),
+);
+PaginationContent.displayName = "PaginationContent";
+
+const PaginationItem = React.forwardRef
+
+));
+PaginationItem.displayName = "PaginationItem";
+
+type PaginationLinkProps = {
+  isActive?: boolean;
+} & Pick
+
+&
+  React.ComponentProps
+
+);
+PaginationLink.displayName = "PaginationLink";
+
+const PaginationPrevious = ({ className, ...props }: React.ComponentProps
+
+Previous
+
+);
+PaginationPrevious.displayName = "PaginationPrevious";
+
+const PaginationNext = ({ className, ...props }: React.ComponentProps
+
+Next
+
+);
+PaginationNext.displayName = "PaginationNext";
+
+const PaginationEllipsis = ({ className, ...props }: React.ComponentProps
+
+More pages
+
+;
+});
+RadioGroup.displayName = RadioGroupPrimitive.Root.displayName;
+
+const RadioGroupItem = React.forwardRef
+
+);
+
+const ResizablePanel = ResizablePrimitive.Panel;
+
+const ResizableHandle = ({
+  withHandle,
+  className,
+  ...props
+}: React.ComponentProps
+
+{withHandle && (
+
+));
+ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;
+
+const ScrollBar = React.forwardRef
+
+));
+SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
+
+const SelectScrollUpButton = React.forwardRef
+
+));
+SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
+
+const SelectScrollDownButton = React.forwardRef
+
+));
+SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
+
+const SelectContent = React.forwardRef
+
+));
+SelectContent.displayName = SelectPrimitive.Content.displayName;
+
+const SelectLabel = React.forwardRef
+
+));
+SelectLabel.displayName = SelectPrimitive.Label.displayName;
+
+const SelectItem = React.forwardRef
+
+));
+SelectItem.displayName = SelectPrimitive.Item.displayName;
+
+const SelectSeparator = React.forwardRef
+
+));
+SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
+
+const sheetVariants = cva(
+  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  {
+    variants: {
+      side: {
+        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        bottom:
+          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+        right:
+          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+      },
+    },
+    defaultVariants: {
+      side: "right",
+    },
+  },
+);
+
+interface SheetContentProps
+  extends React.ComponentPropsWithoutRef
+
+{}
+
+const SheetContent = React.forwardRef
+
+),
+);
+SheetContent.displayName = SheetPrimitive.Content.displayName;
+
+const SheetHeader = ({ className, ...props }: React.HTMLAttributes
+
+);
+SheetHeader.displayName = "SheetHeader";
+
+const SheetFooter = ({ className, ...props }: React.HTMLAttributes
+
+);
+SheetFooter.displayName = "SheetFooter";
+
+const SheetTitle = React.forwardRef
+
+));
+SheetTitle.displayName = SheetPrimitive.Title.displayName;
+
+const SheetDescription = React.forwardRef
+
+void;
+};
+
+const SidebarContext = React.createContext
+
+(null);
+
+function useSidebar() {
+  const context = React.useContext(SidebarContext);
+  if (!context) {
+    throw new Error("useSidebar must be used within a SidebarProvider.");
+  }
+
+  return context;
+}
+
+const SidebarProvider = React.forwardRef
+
+window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleSidebar]);
+
+  // We add a state so that we can do data-state="expanded" or "collapsed".
+  // This makes it easier to style the sidebar with Tailwind classes.
+  const state = open ? "expanded" : "collapsed";
+
+  const contextValue = React.useMemo
+
+({
+      state,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+    }),
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+  );
+
+  return (
+
+);
+});
+SidebarProvider.displayName = "SidebarProvider";
+
+const Sidebar = React.forwardRef
+
+{
+  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+
+  if (collapsible === "none") {
+    return (
+
+);
+  }
+
+  if (isMobile) {
+    return (
+
+);
+  }
+
+  return (
+
+{/* This is what handles the sidebar gap on desktop */}
+
+);
+});
+Sidebar.displayName = "Sidebar";
+
+const SidebarTrigger = React.forwardRef
+
+, React.ComponentProps
+
+{
+    const { toggleSidebar } = useSidebar();
+
+    return (
+
+Toggle Sidebar
+
+);
+  },
+);
+SidebarTrigger.displayName = "SidebarTrigger";
+
+const SidebarRail = React.forwardRef
+
+);
+  },
+);
+SidebarRail.displayName = "SidebarRail";
+
+const SidebarInset = React.forwardRef
+
+);
+});
+SidebarInset.displayName = "SidebarInset";
+
+const SidebarInput = React.forwardRef
+
+);
+  },
+);
+SidebarInput.displayName = "SidebarInput";
+
+const SidebarHeader = React.forwardRef
+
+;
+});
+SidebarHeader.displayName = "SidebarHeader";
+
+const SidebarFooter = React.forwardRef
+
+;
+});
+SidebarFooter.displayName = "SidebarFooter";
+
+const SidebarSeparator = React.forwardRef
+
+);
+  },
+);
+SidebarSeparator.displayName = "SidebarSeparator";
+
+const SidebarContent = React.forwardRef
+
+);
+});
+SidebarContent.displayName = "SidebarContent";
+
+const SidebarGroup = React.forwardRef
+
+);
+});
+SidebarGroup.displayName = "SidebarGroup";
+
+const SidebarGroupLabel = React.forwardRef
+
+{
+    const Comp = asChild ? Slot : "div";
+
+    return (
+
+);
+  },
+);
+SidebarGroupLabel.displayName = "SidebarGroupLabel";
+
+const SidebarGroupAction = React.forwardRef
+
+{
+    const Comp = asChild ? Slot : "button";
+
+    return (
+
+);
+  },
+);
+SidebarGroupAction.displayName = "SidebarGroupAction";
+
+const SidebarGroupContent = React.forwardRef
+
+),
+);
+SidebarGroupContent.displayName = "SidebarGroupContent";
+
+const SidebarMenu = React.forwardRef
+
+));
+SidebarMenu.displayName = "SidebarMenu";
+
+const SidebarMenuItem = React.forwardRef
+
+svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        outline:
+          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
+      },
+      size: {
+        default: "h-8 text-sm",
+        sm: "h-7 text-xs",
+        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+);
+
+const SidebarMenuButton = React.forwardRef
+
+& {
+    asChild?: boolean;
+    isActive?: boolean;
+    tooltip?: string | React.ComponentProps
+
+;
+  } & VariantProps
+
+{
+  const Comp = asChild ? Slot : "button";
+  const { isMobile, state } = useSidebar();
+
+  const button = (
+
+);
+
+  if (!tooltip) {
+    return button;
+  }
+
+  if (typeof tooltip === "string") {
+    tooltip = {
+      children: tooltip,
+    };
+  }
+
+  return (
+
+{button}
+
+);
+});
+SidebarMenuButton.displayName = "SidebarMenuButton";
+
+const SidebarMenuAction = React.forwardRef
+
+{
+  const Comp = asChild ? Slot : "button";
+
+  return (
+
+);
+});
+SidebarMenuAction.displayName = "SidebarMenuAction";
+
+const SidebarMenuBadge = React.forwardRef
+
+),
+);
+SidebarMenuBadge.displayName = "SidebarMenuBadge";
+
+const SidebarMenuSkeleton = React.forwardRef
+
+{
+    return `${Math.floor(Math.random() * 40) + 50}%`;
+  }, []);
+
+  return (
+
+{showIcon &&
+
+);
+});
+SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton";
+
+const SidebarMenuSub = React.forwardRef
+
+),
+);
+SidebarMenuSub.displayName = "SidebarMenuSub";
+
+const SidebarMenuSubItem = React.forwardRef
+
+));
+SidebarMenuSubItem.displayName = "SidebarMenuSubItem";
+
+const SidebarMenuSubButton = React.forwardRef
+
+{
+  const Comp = asChild ? Slot : "a";
+
+  return (
+
+) {
+  return
+
+{
+  const { theme = "system" } = useTheme();
+
+  return (
+
+),
+);
+Table.displayName = "Table";
+
+const TableHeader = React.forwardRef
+
+,
+);
+TableHeader.displayName = "TableHeader";
+
+const TableBody = React.forwardRef
+
+),
+);
+TableBody.displayName = "TableBody";
+
+const TableFooter = React.forwardRef
+
+),
+);
+TableFooter.displayName = "TableFooter";
+
+const TableRow = React.forwardRef
+
+),
+);
+TableRow.displayName = "TableRow";
+
+const TableHead = React.forwardRef
+
+),
+);
+TableHead.displayName = "TableHead";
+
+const TableCell = React.forwardRef
+
+),
+);
+TableCell.displayName = "TableCell";
+
+const TableCaption = React.forwardRef
+
+));
+TabsList.displayName = TabsPrimitive.List.displayName;
+
+const TabsTrigger = React.forwardRef
+
+));
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
+
+const TabsContent = React.forwardRef
+
+{}
+
+const Textarea = React.forwardRef
+
+));
+ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
+
+const toastVariants = cva(
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+  {
+    variants: {
+      variant: {
+        default: "border bg-background text-foreground",
+        destructive: "destructive group border-destructive bg-destructive text-destructive-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+const Toast = React.forwardRef
+
+;
+});
+Toast.displayName = ToastPrimitives.Root.displayName;
+
+const ToastAction = React.forwardRef
+
+));
+ToastAction.displayName = ToastPrimitives.Action.displayName;
+
+const ToastClose = React.forwardRef
+
+));
+ToastClose.displayName = ToastPrimitives.Close.displayName;
+
+const ToastTitle = React.forwardRef
+
+));
+ToastTitle.displayName = ToastPrimitives.Title.displayName;
+
+const ToastDescription = React.forwardRef
+
+));
+ToastDescription.displayName = ToastPrimitives.Description.displayName;
+
+type ToastProps = React.ComponentPropsWithoutRef
+
+;
+
+type ToastActionElement = React.ReactElement
+
+{toasts.map(function ({ id, title, description, action, ...props }) {
+        return (
+
+{title &&
+
+}
+              {description &&
+
+{action}
+
+({
+  size: "default",
+  variant: "default",
+});
+
+const ToggleGroup = React.forwardRef
+
+));
+
+ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName;
+
+const ToggleGroupItem = React.forwardRef
+
+{
+  const context = React.useContext(ToggleGroupContext);
+
+  return (
+
+{
+      setIsMobile(window.innerWidth
+
+;
+    }
+  | {
+      type: ActionType["DISMISS_TOAST"];
+      toastId?: ToasterToast["id"];
+    }
+  | {
+      type: ActionType["REMOVE_TOAST"];
+      toastId?: ToasterToast["id"];
+    };
+
+interface State {
+  toasts: ToasterToast[];
+}
+
+const toastTimeouts = new Map
+
+t.id !== action.toastId),
+      };
+  }
+};
+
+const listeners: Array
+
+{
+    listener(memoryState);
+  });
+}
+
+type Toast = Omit
+
+{
+        if (!open) dismiss();
+      },
+    },
+  });
+
+  return {
+    id: id,
+    dismiss,
+    update,
+  };
+}
+
+function useToast() {
+  const [state, setState] = React.useState
+
+{
+  const watchId = useRef
+
+(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
+  public: {
+    Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_id: string | null
+          target_table: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      donation_items: {
+        Row: {
+          condition: string | null
+          donation_id: string
+          id: string
+          image_path: string | null
+          item_name: string
+          quantity: number
+        }
+        Insert: {
+          condition?: string | null
+          donation_id: string
+          id?: string
+          image_path?: string | null
+          item_name: string
+          quantity: number
+        }
+        Update: {
+          condition?: string | null
+          donation_id?: string
+          id?: string
+          image_path?: string | null
+          item_name?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donation_items_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      donations: {
+        Row: {
+          amount: number | null
+          category: Database["public"]["Enums"]["donation_category"]
+          created_at: string | null
+          description: string | null
+          donor_id: string
+          id: string
+          ngo_id: string | null
+          pickup_address: string
+          preferred_pickup_date: string | null
+          status: Database["public"]["Enums"]["donation_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          category: Database["public"]["Enums"]["donation_category"]
+          created_at?: string | null
+          description?: string | null
+          donor_id: string
+          id?: string
+          ngo_id?: string | null
+          pickup_address: string
+          preferred_pickup_date?: string | null
+          status?: Database["public"]["Enums"]["donation_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          category?: Database["public"]["Enums"]["donation_category"]
+          created_at?: string | null
+          description?: string | null
+          donor_id?: string
+          id?: string
+          ngo_id?: string | null
+          pickup_address?: string
+          preferred_pickup_date?: string | null
+          status?: Database["public"]["Enums"]["donation_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_donor_id_fkey"
+            columns: ["donor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_ngo_id_fkey"
+            columns: ["ngo_id"]
+            isOneToOne: false
+            referencedRelation: "ngos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ngo_posts: {
+        Row: {
+          category: Database["public"]["Enums"]["donation_category"] | null
+          created_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          ngo_id: string
+          quantity_needed: number | null
+          title: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["donation_category"] | null
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          ngo_id: string
+          quantity_needed?: number | null
+          title: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["donation_category"] | null
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          ngo_id?: string
+          quantity_needed?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ngo_posts_ngo_id_fkey"
+            columns: ["ngo_id"]
+            isOneToOne: false
+            referencedRelation: "ngos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ngos: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          approved_at: string | null
+          approved_by: string | null
+          city: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          name: string
+          pincode: string | null
+          profile_id: string
+          registration_doc_path: string | null
+          state: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name: string
+          pincode?: string | null
+          profile_id: string
+          registration_doc_path?: string | null
+          state?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          pincode?: string | null
+          profile_id?: string
+          registration_doc_path?: string | null
+          state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ngos_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ngos_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pickups: {
+        Row: {
+          created_at: string | null
+          donation_id: string
+          id: string
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["pickup_status"] | null
+          updated_at: string | null
+          volunteer_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          donation_id: string
+          id?: string
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["pickup_status"] | null
+          updated_at?: string | null
+          volunteer_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          donation_id?: string
+          id?: string
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["pickup_status"] | null
+          updated_at?: string | null
+          volunteer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickups_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickups_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "volunteers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string | null
+          full_name: string
+          id: string
+          lat: number | null
+          lng: number | null
+          phone: string | null
+          pincode: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          state: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          full_name: string
+          id: string
+          lat?: number | null
+          lng?: number | null
+          phone?: string | null
+          pincode?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          state?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          phone?: string | null
+          pincode?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          state?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      volunteers: {
+        Row: {
+          created_at: string | null
+          id: string
+          ngo_id: string
+          phone: string | null
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ngo_id: string
+          phone?: string | null
+          profile_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ngo_id?: string
+          phone?: string | null
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteers_ngo_id_fkey"
+            columns: ["ngo_id"]
+            isOneToOne: false
+            referencedRelation: "ngos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+    }
+    Enums: {
+      app_role: "donor" | "ngo" | "admin" | "volunteer"
+      donation_category:
+        | "stationary"
+        | "books"
+        | "clothes"
+        | "electronics"
+        | "money"
+      donation_status:
+        | "Requested"
+        | "Accepted"
+        | "Volunteer Assigned"
+        | "Picked Up"
+        | "Delivered"
+        | "Cancelled"
+        | "Rejected"
+      pickup_status:
+        | "Assigned"
+        | "En route"
+        | "Picked Up"
+        | "Delivered"
+        | "Cancelled"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit
+
+type DefaultSchema = DatabaseWithoutInternals[Extract
+
+]
+
+export type Tables
+
+= DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert
+
+= DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate
+
+= DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums
+
+= DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes
+
+([]);
+  const [filtered, setFiltered] = useState
+
+([]);
+
+  const [ngos, setNgos] = useState
+
+([]);
+  const [donors, setDonors] = useState
+
+(a.amount || 0) - (b.amount || 0));
+    }
+
+    setFiltered(data);
+    setPage(1);
+  }, [search, status, category, ngoFilter, donorFilter, sortBy, donations]);
+
+  /* -------------------- PAGINATION -------------------- */
+  const totalPages = Math.ceil(filtered.length / limit);
+  const currentData = filtered.slice((page - 1) * limit, page * limit);
+
+  return (
+
+📦 All Donations
+
+{/* SEARCH + FILTER BAR */}
+
+{/* Search */}
+
+{/* Status */}
+
+Status (All)
+
+Pending
+
+Accepted
+
+Completed
+
+Cancelled
+
+{/* Category */}
+
+Category (All)
+
+{/* NGO */}
+
+NGO (All)
+
+{n.name}
+
+{/* Donor */}
+
+Donor (All)
+
+{d.name}
+
+{/* Sort Options */}
+
+Newest First
+
+Oldest First
+
+Amount: High → Low
+
+Amount: Low → High
+
+{/* LOADING */}
+      {loading ? (
+
+{/* NO RESULTS */}
+          {filtered.length === 0 ? (
+
+No donations found.
+
+{/* TABLE */}
+
+Donor
+
+Category
+
+Amount
+
+Status
+
+Date
+
+Action
+
+n.id === d.ngo_id)?.name || "—"}
+
+v.id === d.donor_id)?.name || "—"}
+
+{d.category}
+
+₹{Number(d.amount || 0).toLocaleString()}
+
+{d.status}
+
+{new Date(d.created_at).toLocaleDateString()}
+
+View
+
+{/* PAGINATION */}
+
+Page {page} / {totalPages}
+
+page
+
+{/* EXPORT */}
+
+Export CSV
+
+Export Excel
+
+Export PDF
+
+{
+  const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState
+
+([]);
+  const [selected, setSelected] = useState
+
+{
+    if (!confirm("Reject this NGO? It will be removed permanently.")) return;
+
+    const { error } = await supabase
+      .from("ngos")
+      .delete()
+      .eq("id", ngoId);
+
+    if (error) {
+      console.error(error);
+      alert("Failed to reject / delete NGO");
+      return;
+    }
+
+    alert("NGO rejected & deleted");
+    setSelected(null);
+    loadPending();
+  };
+
+  if (loading)
+    return (
+
+Loading pending NGOs...
+
+);
+
+  return (
+
+NGO Approval Requests
+
+{/* List */}
+
+{pending.length === 0 ? (
+
+No pending NGOs 🎉
+
+{ngo.name}
+
+{ngo.email}
+
+{/* -------------------- MODAL -------------------- */}
+      {selected && (
+
+{/* Close */}
+
+{selected.name}
+
+{selected.email}
+
+{/* Info */}
+
+Description:
+
+{selected.description || "—"}
+
+{/* Actions */}
+
+Approve
+
+Reject
+
+{value || "—"}
+
+{
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
+  const [stats, setStats] = useState({
+    ngos: 0,
+    donors: 0,
+    volunteers: 0,
+    donations: 0,
+    pending: 0,
+    completed: 0,
+    totalValue: 0,
+    activeCampaigns: 0,
+  });
+
+  const [recentActivity, setRecentActivity] = useState
+
+{
+    localStorage.clear();
+    navigate("/auth");
+  };
+
+  const pieData = [
+    { name: "Pending", value: stats.pending },
+    { name: "Completed", value: stats.completed },
+  ];
+
+  const COLORS = ["#facc15", "#22c55e"];
+
+  if (loading)
+    return (
+
+Loading Admin Dashboard...
+
+{/* SIDEBAR */}
+
+Admin Panel
+
+{/* MAIN CONTENT */}
+
+Welcome, Admin 👑
+
+Full control over NGOs, Volunteers, Donors & System Analytics.
+
+Generate Reports
+
+{/* STATS GRID */}
+
+{/* VALUE + PIE CHART */}
+
+{/* TOTAL VALUE */}
+
+Total Donation Value
+
+₹{stats.totalValue}
+
+Across all NGOs and Donors
+
+{/* PIE CHART */}
+
+Donation Status Overview
+
+{/* QUICK ACTIONS */}
+
+Quick Actions
+
+{item.icon}
+
+{/* RECENT ACTIVITY */}
+
+Recent System Activity
+
+{recentActivity.length === 0 ? (
+
+No recent events found.
+
+{a.event}
+
+{new Date(a.created_at).toLocaleString()}
+
+{
+  const map: any = {
+    blue: "text-blue-700 border-blue-600",
+    green: "text-green-700 border-green-600",
+    purple: "text-purple-700 border-purple-600",
+    yellow: "text-yellow-700 border-yellow-500",
+  };
+
+  return (
+
+);
+};
+
+/* SIDEBAR OPTIONS */
+const sidebarItems = [
+  { to: "/admin/dashboard", label: "Dashboard", icon: BarChart3 },
+  { to: "/admin/ngos", label: "Manage NGOs", icon: Building2 },
+  { to: "/admin/donors", label: "Manage Donors", icon: Users },
+  { to: "/admin/volunteers", label: "Manage Volunteers", icon: HeartHandshake },
+  { to: "/admin/donations", label: "All Donations", icon: Gift },
+  { to: "/admin/messages", label: "Messages", icon: MessageSquare },
+  { to: "/admin/reports", label: "Reports", icon: FileBarChart },
+  { to: "/admin/system", label: "System Monitor", icon: Database },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
+];
+
+/* QUICK ACTIONS */
+const quickActions = [
+  { to: "/admin/create-ngo", label: "Add NGO", bg: "bg-blue-600", icon:
+
+},
+  { to: "/admin/create-donor", label: "Add Donor", bg: "bg-green-600", icon:
+
+},
+  { to: "/admin/create-volunteer", label: "Add Volunteer", bg: "bg-purple-600", icon:
+
+},
+  { to: "/admin/donations", label: "View Donations", bg: "bg-yellow-500", icon:
+
+},
+  { to: "/admin/reports", label: "Reports", bg: "bg-gray-700", icon:
+
+},
+  { to: "/admin/system", label: "System Logs", bg: "bg-red-600", icon:
+
+},
+  { to: "/admin/messages", label: "Admin Messages", bg: "bg-indigo-600", icon:
+
+},
+  { to: "/admin/settings", label: "Settings", bg: "bg-orange-600", icon:
+
+{
+  const [donors, setDonors] = useState
+
+([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  // Modal
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState
+
+d.id !== selected.id));
+    setOpen(false);
+    alert("Donor deleted.");
+  };
+
+  /* ---------------------------------------------------------
+     UI RENDER
+  ------------------------------------------------------------ */
+
+  if (loading)
+    return (
+
+Loading Donors...
+
+Manage Donors
+
+{/* Search Bar */}
+
+{/* Donors Table */}
+
+Donations
+
+Total Value
+
+NGOs Helped
+
+Actions
+
+{donor.name}
+
+{donor.email}
+
+Joined: {new Date(donor.created_at).toLocaleDateString()}
+
+{donor.donations}
+
+₹{donor.totalValue}
+
+{donor.ngosHelped}
+
+{/* ---------------- DONOR MODAL ---------------- */}
+      {open && selected && (
+
+{/* Buttons */}
+
+{icon}
+
+{
+  const map: any = {
+    blue: "bg-blue-600 hover:bg-blue-700",
+    orange: "bg-orange-600 hover:bg-orange-700",
+    green: "bg-green-600 hover:bg-green-700",
+    red: "bg-red-600 hover:bg-red-700",
+    black: "bg-black hover:bg-gray-900",
+  };
+
+  return (
+
+{icon} {label}
+
+{
+  const [ngos, setNgos] = useState
+
+([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  // Modal States
+  const [open, setOpen] = useState(false);
+  const [selectedNGO, setSelectedNGO] = useState
+
+n.id !== selectedNGO.id));
+  };
+
+  /* ---------------- UI ---------------- */
+
+  if (loading)
+    return (
+
+Loading NGOs...
+
+Manage NGOs
+
+{/* Table */}
+
+Volunteers
+
+Verified
+
+{ngo.donations}
+
+{ngo.volunteers}
+
+{ngo.verified ? (
+
+{/* ---------------- NGO CONTROL MODAL ---------------- */}
+      {open && selectedNGO && (
+
+{selectedNGO.name}
+
+{selectedNGO.email}
+
+{selectedNGO.verified ? (
+
+{
+  const map: any = {
+    blue: "bg-blue-600 hover:bg-blue-700",
+    purple: "bg-purple-600 hover:bg-purple-700",
+    gray: "bg-gray-600 hover:bg-gray-700",
+    orange: "bg-orange-600 hover:bg-orange-700",
+    green: "bg-green-600 hover:bg-green-700",
+    black: "bg-black hover:bg-gray-900",
+    red: "bg-red-600 hover:bg-red-700",
+  };
+
+  return (
+
+{
+  const [volunteers, setVolunteers] = useState
+
+([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  // Modal state
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState
+
+{
+    if (!selected) return;
+    if (!confirm("Permanently delete this volunteer? This will remove related records depending on DB cascade rules.")) return;
+    await supabase.from("volunteers").delete().eq("id", selected.id);
+    alert("Volunteer deleted");
+    setOpen(false);
+    setSelected(null);
+    loadVolunteers();
+  };
+
+  /* -------------------- UI -------------------- */
+  if (loading)
+    return (
+
+Loading Volunteers...
+
+Manage Volunteers
+
+Volunteer
+
+Tasks
+
+{v.name}
+
+{v.email}
+
+Joined: {new Date(v.created_at).toLocaleDateString()}
+
+{v.totalTasks}
+
+{v.completedTasks}
+
+{v.ngosHelped}
+
+{v.verified ? (
+
+{v.status || "Available"}
+
+{/* Modal */}
+      {open && selected && (
+
+{selected.phone || "-"}
+
+{selected.verified ? (
+
+();
+  const navigate = useNavigate();
+
+  // loading states
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // NGO + impact
+  const [ngo, setNgo] = useState
+
+(null);
+  const [impact, setImpact] = useState
+
+({});
+
+  // page UI
+  const [activeTab, setActiveTab] = useState
+
+("overview");
+
+  // edit form
+  const [form, setForm] = useState
+
+({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    country: "",
+    website: "",
+    facebook: "",
+    instagram: "",
+    twitter: "",
+    image_url: "",
+    description: "",
+  });
+
+  /* -------------------- LISTS & UI STATES -------------------- */
+  // donations
+  const [donations, setDonations] = useState
+
+([]);
+  const [donationsPage, setDonationsPage] = useState(1);
+  const [donationsPerPage] = useState(10);
+  const [donationsTotal, setDonationsTotal] = useState(0);
+  const [donationSearch, setDonationSearch] = useState("");
+  const [donationLoading, setDonationLoading] = useState(false);
+
+  // volunteers
+  const [volunteers, setVolunteers] = useState
+
+([]);
+  const [volunteersLoading, setVolunteersLoading] = useState(false);
+
+  // campaigns
+  const [campaigns, setCampaigns] = useState
+
+([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(false);
+
+  // gallery / reviews / followers / posts / messages
+  const [gallery, setGallery] = useState
+
+([]);
+  const [reviews, setReviews] = useState
+
+([]);
+  const [followers, setFollowers] = useState
+
+([]);
+  const [posts, setPosts] = useState
+
+([]);
+  const [messages, setMessages] = useState
+
+([]);
+
+  // modal state
+  const [selectedDonation, setSelectedDonation] = useState
+
+(null);
+  const [selectedVolunteer, setSelectedVolunteer] = useState
+
+{
+    try {
+      await supabase.from("ngo_campaigns").update({ status }).eq("id", campaignId);
+      fetchCampaigns();
+      alert("Campaign status updated");
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("toggleCampaignStatus", e);
+      alert("Failed to update campaign");
+    }
+  };
+
+  /* -------------------- UI RENDERS -------------------- */
+  if (loading) {
+    return (
+
+);
+  }
+
+  return (
+
+{/* header */}
+
+{ngo?.name}
+
+{ngo?.email}
+
+{ngo?.rating || 0}
+
+Created: {new Date(ngo?.created_at).toLocaleDateString()}
+
+Overview
+
+Campaigns
+
+Gallery
+
+{/* top stats */}
+
+{/* Tab content */}
+
+{activeTab === "overview" && (
+
+)}
+
+        {activeTab === "donations" && (
+
+)}
+
+        {activeTab === "volunteers" && (
+
+)}
+
+        {activeTab === "campaigns" && (
+
+)}
+
+        {activeTab === "gallery" &&
+
+}
+
+        {activeTab === "reviews" &&
+
+}
+
+        {activeTab === "followers" &&
+
+}
+
+        {activeTab === "posts" &&
+
+}
+
+        {activeTab === "messages" &&
+
+);
+}
+
+/* -------------------- UI Subcomponents -------------------- */
+
+function CardStat({ title, value, icon }: any) {
+  return (
+
+);
+}
+
+/* -------------------- Overview Tab -------------------- */
+function OverviewTab({
+  ngo,
+  impact,
+  form,
+  setForm,
+  saving,
+  saveChanges,
+  toggleVerify,
+  resetPassword,
+  disableNGO,
+  deleteNGO,
+  refreshAll,
+}: any) {
+  return (
+
+Edit NGO
+
+{saving ? "Saving..." : "Save Changes"}
+
+Refresh
+
+Account Controls
+
+{ngo.verified ? "Unverify NGO" : "Verify NGO"}
+
+Reset Password
+
+Disable NGO
+
+Delete NGO
+
+{/* analytics summary */}
+
+₹{impact?.total_value || 0}
+
+Top Category
+
+{impact?.top_category || "—"}
+
+Monthly Growth
+
+{impact?.monthly_growth_percent ?? 0}%
+
+);
+}
+
+/* -------------------- Donations Tab -------------------- */
+function DonationsTab({
+  donations,
+  loading,
+  page,
+  perPage,
+  total,
+  onPageChange,
+  onSearch,
+  volunteers,
+  updateDonationStatus,
+  assignVolunteer,
+  refresh,
+}: any) {
+  const totalPages = Math.max(1, Math.ceil((total || 0) / perPage));
+
+  return (
+
+Total: {total || 0}
+
+{loading ? (
+
+) : donations.length === 0 ? (
+
+{d.amount ? `₹${d.amount}` : "—"}
+
+{d.quantity || "-"}
+
+{d.donor_id || "—"}
+
+Accept
+
+Complete
+
+Assign volunteer
+
+{v.name || v.email}
+
+{/* pagination */}
+
+Showing page {page} of {totalPages}
+
+onPageChange(Math.max(1, page - 1))} disabled={page
+
+Prev
+
+);
+}
+
+/* -------------------- Volunteers Tab -------------------- */
+function VolunteersTab({ volunteers, loading, refresh }: any) {
+  return (
+
+) : volunteers.length === 0 ? (
+
+No volunteers found.
+
+Joined: {v.joined_at ? new Date(v.joined_at).toLocaleDateString() : "—"}
+
+Message
+
+);
+}
+
+/* -------------------- Campaigns Tab -------------------- */
+function CampaignsTab({ campaigns, loading, toggleCampaignStatus, refresh }: any) {
+  return (
+
+Create Campaign
+
+) : campaigns.length === 0 ? (
+
+No campaigns found.
+
+{c.title || "Untitled"}
+
+{c.summary || c.description || "-"}
+
+Status: {c.status}
+
+{c.status === "Active" ? "Pause" : "Activate"}
+
+Edit
+
+{
+    if (!confirm("Delete media item?")) return;
+    try {
+      await supabase.from("ngo_gallery").delete().eq("id", id);
+      alert("Deleted");
+      refresh();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("delete gallery", e);
+      alert("Failed to delete");
+    }
+  };
+
+  return (
+
+Add Media
+
+{gallery.length === 0 ? (
+
+No media yet.
+
+{g.title || "Untitled"}
+
+Delete
+
+{
+    if (!confirm("Delete review?")) return;
+    try {
+      await supabase.from("ngo_reviews").delete().eq("id", id);
+      alert("Deleted");
+      refresh();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("delete review", e);
+      alert("Failed");
+    }
+  };
+
+  return (
+
+Reviews
+
+{reviews.length === 0 ?
+
+No reviews yet.
+
+{r.donor?.name || r.donor_id}
+
+{new Date(r.created_at).toLocaleString()}
+
+{r.review}
+
+{
+    if (!confirm("Remove follower?")) return;
+    try {
+      await supabase.from("ngo_followers").delete().eq("id", id);
+      alert("Removed");
+      refresh();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("remove follower", e);
+      alert("Failed");
+    }
+  };
+
+  return (
+
+Followers
+
+{followers.length === 0 ?
+
+No followers yet.
+
+{f.donor?.name || f.donor_id}
+
+{f.donor?.email}
+
+Remove
+
+{
+    if (!confirm("Delete post?")) return;
+    try {
+      await supabase.from("ngo_posts").delete().eq("id", id);
+      alert("Deleted");
+      refresh();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("delete post", e);
+      alert("Failed");
+    }
+  };
+
+  return (
+
+Posts
+
+New Post
+
+{posts.length === 0 ?
+
+No posts yet.
+
+{p.title}
+
+{new Date(p.created_at).toLocaleDateString()}
+
+{p.content}
+
+);
+}
+
+/* -------------------- Messages Tab -------------------- */
+function MessagesTab({ messages, refresh }: any) {
+  return (
+
+Messages
+
+{messages.length === 0 ?
+
+No messages found.
+
+From: {m.sender_role} ({m.sender_id})
+
+To: {m.receiver_role} ({m.receiver_id})
+
+{new Date(m.created_at).toLocaleString()}
+
+{m.message}
+
+);
+}
+
+/* -------------------- Small helpers -------------------- */
+function StatusBadge({ status }: any) {
+  const map: any = {
+    Pending: "bg-yellow-100 text-yellow-700",
+    Accepted: "bg-blue-100 text-blue-700",
+    Completed: "bg-green-100 text-green-700",
+    Cancelled: "bg-red-100 text-red-700",
+    Assigned: "bg-purple-100 text-purple-700",
+  };
+  return
+
+{status}
+
+([]);
+  const [monthlyTrend, setMonthlyTrend] = useState
+
+([]);
+  const [topNGOs, setTopNGOs] = useState
+
+([]);
+  const [topDonors, setTopDonors] = useState
+
+([]);
+  const [topVolunteers, setTopVolunteers] = useState
+
+{
+        const { data: volInfo } = await supabase
+          .from("volunteers")
+          .select("name,city")
+          .eq("id", v.volunteer_id)
+          .single();
+        return { ...volInfo, ...v };
+      }) || []
+    );
+
+    // FINAL SET
+    setSummary({
+      ngos,
+      donors,
+      volunteers,
+      donations: donations?.length || 0,
+      pending,
+      completed,
+      cancelled,
+      totalValue,
+    });
+
+    setCategoryData(categoryChart);
+    setMonthlyTrend(monthlyTrendData);
+    setTopNGOs(enrichedNGOs);
+    setTopDonors(enrichedDonors);
+    setTopVolunteers(enrichedVolunteers);
+
+    setLoading(false);
+  };
+
+  if (loading)
+    return (
+
+📊 System Reports
+
+{/* SUMMARY CARDS */}
+
+{/* DONATION STATUS */}
+
+₹{summary.totalValue}
+
+{/* CHARTS */}
+
+{/* CATEGORY PIE CHART */}
+
+{/* MONTHLY TREND */}
+
+{/* TOP LISTS */}
+
+{/* EXPORT BUTTONS */}
+
+{icon} {title}
+
+{data.length === 0 ? (
+
+No records.
+
+{i + 1}. {item.name} ({item.city || "—"})
+
+{item[valueKey]}
+              {valueKey === "total_value" ? "₹" : ""}
+
+([]);
+  const [filteredNGOs, setFilteredNGOs] = useState
+
+([]);
+  const [search, setSearch] = useState("");
+
+  const [selectedNGO, setSelectedNGO] = useState
+
+("");
+  const [ngoDetails, setNGODetails] = useState
+
+(null);
+
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const [system, setSystem] = useState({
+    donations: 0,
+    totalValue: 0,
+    pending: 0,
+    accepted: 0,
+    completed: 0,
+    cancelled: 0,
+
+    totalVolunteers: 0,
+    activeVolunteers: 0,
+    totalDonors: 0,
+    activeCampaigns: 0,
+
+    messages: 0,
+    unreadMessages: 0,
+
+    events: 0,
+    alerts: 0,
+  });
+
+  const [recentEvents, setRecentEvents] = useState
+
+([]);
+  const [volunteerActivity, setVolunteerActivity] = useState
+
+10 ? 1 : 0,
+    });
+
+    setRecentEvents(events || []);
+    setMessages(msgs || []);
+    setVolunteerActivity(volAct || []);
+
+    setLoading(false);
+  };
+
+  /* -------------------- UI -------------------- */
+
+  return (
+
+System Monitor
+
+{/* SEARCH + DROPDOWN */}
+
+Select NGO
+
+{selectedNGO && (
+
+Reload
+
+{/* IF NOT SELECTED */}
+      {!selectedNGO && (
+
+Select an NGO to start monitoring.
+
+)}
+
+      {/* LOADING */}
+      {loading && (
+
+)}
+
+      {/* DATA */}
+      {!loading && selectedNGO && (
+
+{/* TOP TABS */}
+
+{tab.toUpperCase()}
+
+)
+            )}
+
+{/* --------------------- OVERVIEW TAB --------------------- */}
+          {activeTab === "overview" && ngoDetails && (
+
+{/* NGO INFO */}
+
+{ngoDetails.name}
+
+{/* OVERVIEW CARDS */}
+
+0 && (
+
+High pending donations! (More than 10)
+
+)}
+
+          {/* --------------------- DONATION TAB --------------------- */}
+          {activeTab === "donations" && (
+
+Donation Statistics
+
+)}
+
+          {/* --------------------- VOLUNTEER TAB --------------------- */}
+          {activeTab === "volunteers" && (
+
+)}
+
+          {/* --------------------- MESSAGES TAB --------------------- */}
+          {activeTab === "messages" && (
+
+)}
+
+          {/* --------------------- EVENTS TAB --------------------- */}
+          {activeTab === "events" && (
+
+);
+}
+
+/* ---------------- COMPONENTS ---------------- */
+
+function Info({ label, value }: any) {
+  return (
+
+);
+}
+
+function SysCard({ label, value, icon, color }: any) {
+  return (
+
+);
+}
+
+function SmallCard({ label, value, color }: any) {
+  return (
+
+);
+}
+
+function WideCard({ title, value, icon, color }: any) {
+  return (
+
+);
+}
+
+function Section({ title, icon, children }: any) {
+  return (
+
+);
+}
+
+function Item({ text, date }: any) {
+  return (
+
+{text}
+
+{new Date(date).toLocaleString()}
+
+{
+  return (
+
+All NGOs
+
+List of all registered NGOs.
+
+{
+    if (role !== "donor" && role !== "volunteer") {
+      alert("Google login allowed only for Donor & Volunteer");
+      return;
+    }
+
+    setLoading(true);
+
+    // save role before redirect
+    localStorage.setItem("oauth_role", role);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/auth/callback",
+      },
+    });
+
+    if (error) {
+      alert(error.message);
+      setLoading(false);
+    }
+  };
+
+  return (
+
+{/* Header */}
+
+Home
+
+{/* Card */}
+
+{isSignup && role !== "admin" ? "Create Account" : "Welcome Back"}
+
+{/* Role Selector */}
+
+{r.toUpperCase()}
+
+{/* Form */}
+
+{isSignup && role !== "admin" && (
+
+) : isSignup ? (
+              "Sign Up"
+            ) : (
+              "Sign In"
+            )}
+
+{/* GOOGLE BUTTON */}
+          {(role === "donor" || role === "volunteer") && (
+
+Continue with Google
+
+)}
+
+          {/* Switch */}
+          {role !== "admin" && (
+
+{isSignup ? (
+
+Already have an account?{" "}
+
+New here?{" "}
+
+Create Account
+
+{
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user;
+
+      if (!user) return navigate("/auth");
+
+      const role = localStorage.getItem("oauth_role");
+      if (!role) return navigate("/auth");
+
+      const table = role === "donor" ? "donors" : "volunteers";
+
+      const email = user.email.toLowerCase();
+      const name = user.user_metadata.full_name || "User";
+
+      // 1️⃣ Check by auth_id
+      const { data: byAuthId } = await supabase
+        .from(table)
+        .select("*")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+
+      if (byAuthId) {
+        localStorage.setItem("user", JSON.stringify(byAuthId));
+        localStorage.setItem("role", role);
+        return navigate(`/${role}/dashboard`);
+      }
+
+      // 2️⃣ Check by email
+      const { data: byEmail } = await supabase
+        .from(table)
+        .select("*")
+        .eq("email", email)
+        .maybeSingle();
+
+      let profile;
+
+      if (byEmail) {
+        // 3️⃣ LINK GOOGLE ACCOUNT
+        const { data, error } = await supabase
+          .from(table)
+          .update({
+            auth_id: user.id,
+            provider: "google",
+          })
+          .eq("email", email)
+          .select()
+          .single();
+
+        if (error) return alert(error.message);
+        profile = data;
+      } else {
+        // 4️⃣ NEW GOOGLE USER
+        const { data, error } = await supabase
+          .from(table)
+          .insert({
+            auth_id: user.id,
+            name,
+            email,
+            provider: "google",
+            created_at: new Date(),
+          })
+          .select()
+          .single();
+
+        if (error) return alert(error.message);
+        profile = data;
+      }
+
+      localStorage.setItem("user", JSON.stringify(profile));
+      localStorage.setItem("role", role);
+      navigate(`/${role}/dashboard`);
+    };
+
+    run();
+  }, [navigate]);
+
+  return
+
+Signing you in…
+
+n.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+
+{/* 🔙 Back */}
+
+Back to Home
+
+{/* 🏷 Header */}
+
+{/* 🔍 Search */}
+
+{/* NGO LIST */}
+        {loading ? (
+
+) : filtered.length === 0 ? (
+
+No NGOs found under this category.
+
+{/* Top Section */}
+
+{ngo.name}
+                      {ngo.verified && (
+
+{ngo.rating || 0} ({ngo.total_reviews || 0})
+
+{ngo.city}, {ngo.state}
+
+{/* MAP */}
+                {ngo.latitude && (
+
+)}
+
+                {/* Buttons */}
+
+View Profile →
+
+Donate ₹
+
+Browse Categories
+
+About Us
+
+Welcome to
+
+— a bridge between kindness and
+          need. We’re a platform dedicated to connecting donors, NGOs, and
+          volunteers to create meaningful community impact through transparent
+          and direct giving.
+
+Our mission is to make donations more personal, more visible, and
+          more effective. Whether you’re an NGO looking for support, a donor
+          seeking trustworthy causes, or a volunteer ready to help, DenaSetu
+          brings everyone together in one trusted space.
+
+Together, we aim to empower communities and make generosity
+          effortless.
+
+Made with ❤️ by the DenaSetu team.
+
+{
+    e.preventDefault();
+    alert(`Thank you, ${name}! Your message has been sent.`);
+    setName("");
+    setEmail("");
+    setMessage("");
+  };
+
+  return (
+
+Contact Us
+
+Name
+
+Email
+
+Send Message
+
+Page Not Found
+
+The page you’re looking for doesn’t exist or was moved.
+
+Go Back Home
+
+Terms & Conditions
+
+. By using our website and
+          services, you agree to the following terms and conditions. Please read
+          them carefully.
+
+1. General Information
+
+DenaSetu is a platform that connects donors, NGOs, and volunteers to
+          promote charitable and community-driven activities. We do not directly
+          handle or guarantee transactions between users and organizations.
+
+2. User Responsibilities
+
+Users must provide accurate information when registering and using our
+          services. Misuse of the platform for fraudulent activities may result
+          in suspension or legal action.
+
+3. Donations and Refund Policy
+
+Donations made through this platform are voluntary and non-refundable.
+          DenaSetu is not responsible for the use or management of donated
+          funds by NGOs.
+
+4. Privacy and Data
+
+We respect your privacy. Your personal data will only be used for
+          communication and verification purposes as outlined in our Privacy
+          Policy.
+
+5. Changes
+
+These terms may be updated periodically. Continued use of the platform
+          implies your acceptance of the latest version.
+
+Last Updated: November 2025
+
+Contact
+
+Reach out to us through the contact details below.  
+          We’re always here to help!
+
+Contact Information
+
+{/* Phone */}
+
+Phone
+
++91 90048 98301
+
+{/* Email */}
+
+ganesh.17478@sakec.ac.in
+
+{/* Address */}
+
+Office Address
+
+DenaSetu HQ, Mumbai, Maharashtra, India
+
+{/* Map */}
+
+{
+    const [markerPos, setMarkerPos] = useState({
+      lat: pickupLocation.lat,
+      lng: pickupLocation.lng,
+    });
+
+    useMapEvents({
+      click(e) {
+        setMarkerPos(e.latlng);
+        setPickupLocation({
+          lat: e.latlng.lat,
+          lng: e.latlng.lng,
+          accuracy: null,
+          map_source: "manual",
+        });
+      },
+    });
+
+    return (
+
+);
+  };
+
+  /* ---------------------- Load NGOs ---------------------- */
+  const [ngos, setNgos] = useState
+
+([]);
+  const [selectedNGO, setSelectedNGO] = useState
+
+alert("Failed to get location")
+    );
+  };
+
+  /* ---------------------- Image Upload ---------------------- */
+  const [image, setImage] = useState
+
+(null);
+  const [preview, setPreview] = useState
+
+{
+    e.preventDefault();
+
+    setUploading(true);
+
+    const donor = JSON.parse(localStorage.getItem("user") || "{}");
+    let uploadedImageUrl: string | null = null;
+
+    try {
+      // Upload item image
+      if (image) {
+        const ext = image.name.split(".").pop();
+        const fileName = `${donor.id}-${Date.now()}.${ext}`;
+
+        const upload = await supabase.storage
+          .from("donation_images")
+          .upload(fileName, image);
+
+        if (upload.error) throw upload.error;
+
+        uploadedImageUrl = supabase.storage
+          .from("donation_images")
+          .getPublicUrl(upload.data.path).data.publicUrl;
+      }
+
+      // Save donation
+      const { error } = await supabase.from("donations").insert({
+        donor_id: donor.id,
+        ngo_id: form.ngo_id,
+        category: form.category,
+        quantity: Number(form.quantity),
+        donation_type: form.donation_type,
+
+        description: form.description,
+        donor_phone: form.donor_phone,
+        instructions: form.instructions,
+
+        image_url: uploadedImageUrl,
+
+        pickup_latitude: pickupLocation.lat,
+        pickup_longitude: pickupLocation.lng,
+        pickup_accuracy: pickupLocation.accuracy,
+        pickup_map_source: pickupLocation.map_source,
+
+        status: "Pending",
+      });
+
+      if (error) throw error;
+
+      alert("🎉 Donation submitted!");
+      navigate("/donor/dashboard");
+    } catch (err: any) {
+      alert("❌ " + err.message);
+    }
+
+    setUploading(false);
+  };
+
+  /* =====================================================
+                          UI
+     ===================================================== */
+
+  return (
+
+Back
+
+{/* NGO SELECT */}
+
+Choose NGO
+
+{n.name} — {n.city}
+
+{/* CATEGORY */}
+
+{cat}
+
+{/* QUANTITY */}
+
+Quantity
+
+{/* DONATION TYPE */}
+
+Donation Type
+
+Pickup
+
+Drop-off
+
+Either
+
+{/* IMAGE UPLOAD */}
+
+Upload Image
+
+{preview && (
+
+Description
+
+{/* INSTRUCTIONS */}
+
+Instructions
+
+{/* PHONE */}
+
+Donor Phone
+
+{/* GPS BUTTON */}
+
+📍 Use My GPS Location
+
+{/* LOCATION MAP */}
+
+Pickup Location
+
+Lat: {pickupLocation.lat} | Lng: {pickupLocation.lng}
+
+Accuracy: {pickupLocation.accuracy || "N/A"}
+
+Source: {pickupLocation.map_source}
+
+{/* SUBMIT */}
+
+{uploading ? "Saving..." :
+
+Submit Donation
+
+{
+  const [donations, setDonations] = useState
+
+([]);
+  const [donor, setDonor] = useState
+
+{
+    localStorage.clear();
+    navigate("/auth");
+  };
+
+  return (
+
+{/* Sidebar */}
+
+Donate Money
+
+Donation History
+
+{/* ⭐ Ongoing Campaigns */}
+
+Ongoing Campaigns
+
+Favorites
+
+My Impact
+
+Message Center
+
+View NGOs
+
+Settings
+
+{/* Main Section */}
+
+{/* Page Header */}
+
+Welcome, {donor?.name || "Donor"} 👋
+
+Here’s your donation summary and activity overview.
+
+New Donation
+
+{stats.total}
+
+Total Donations
+
+Total Value Donated
+
+{stats.ngos}
+
+{stats.level}
+
+Donor Level
+
+{/* Recent Donations */}
+
+Recent Donations
+
+0 ? (
+
+Amount / Qty
+
+{d.ngos?.name || "—"}
+
+{d.description}
+
+{d.category === "Money"
+                          ? `₹${d.amount}`
+                          : d.quantity}
+
+You haven’t made any donations yet.{" "}
+
+Create one now!
+
+{
+    e.preventDefault();
+    alert(`Donated ₹${amount} to ${ngo || "Selected NGO"} successfully!`);
+    setAmount("");
+    setNgo("");
+  };
+
+  return (
+
+Make a Donation
+
+([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [selectedNGO, setSelectedNGO] = useState
+
+{
+    if (!amount || Number(amount)
+
+{/* Search NGOs */}
+
+)}
+
+        {selectedNGO && (
+
+Selected NGO
+
+Donate ₹{amount || "0"}
+
+{
+  const { id } = useParams
+
+();
+  const navigate = useNavigate();
+
+  const [donation, setDonation] = useState
+
+(null);
+  const [events, setEvents] = useState
+
+([]);
+  const [volunteer, setVolunteer] = useState
+
+(null);
+  const [related, setRelated] = useState
+
+([]);
+  const [loading, setLoading] = useState(true);
+  const [rating, setRating] = useState
+
+{
+    if (!rating || !feedback.trim()) return alert("Enter rating & feedback!");
+
+    await supabase
+      .from("donations")
+      .update({ donor_rating: rating, ngo_feedback: feedback })
+      .eq("id", id);
+
+    await supabase.from("donation_events").insert({
+      donation_id: id,
+      event: "Feedback Added",
+      note: `${rating}⭐ - ${feedback}`,
+    });
+
+    alert("Thanks for your feedback!");
+    setShowRating(false);
+  };
+
+  if (loading)
+    return (
+
+);
+
+  if (!donation) return
+
+Donation not found.
+
+;
+
+  const currentIndex = STATUS_ORDER.indexOf(donation.status);
+
+  return (
+
+Donation Details
+
+{/* Image */}
+        {donation.image_url && (
+
+)}
+
+        {/* Details */}
+
+{donation.category}
+
+{donation.category === "Money" ? `₹${donation.amount}` : donation.quantity}
+
+{donation.status}
+
+{/* NGO Info */}
+        {donation.ngos && (
+
+NGO Details
+
+{donation.ngos.name}
+
+{donation.ngos.city}
+
+{donation.ngos.verified &&
+
+)}
+
+        {/* Volunteer */}
+        {volunteer && (
+
+Assigned Volunteer
+
+{volunteer.name}
+
+{volunteer.city}
+
+📞 {volunteer.phone}
+
+)}
+
+        {/* Progress Bar */}
+
+Progress
+
+{/* Timeline */}
+
+Donation Timeline
+
+{ev.event}
+
+{ev.note &&
+
+{ev.note}
+
+{new Date(ev.created_at).toLocaleString()}
+
+Other Donations
+
+{r.image_url ? (
+
+{r.category}
+
+)}
+
+        {/* Action Buttons */}
+
+{/* Donor Edit/Cancel */}
+          {donation.status === "Pending" && (
+
+Cancel
+
+)}
+
+          {/* Message + Receipt */}
+
+{donation.ngo_id && (
+
+Message NGO
+
+Receipt
+
+{/* Rating Modal */}
+        {showRating && (
+
+Rate Donation Experience
+
+Submit
+
+{
+      const { data, error } = await supabase
+        .from("donations")
+        .select("*, ngos(name)")
+        .eq("donor_id", donor.id)
+        .order("created_at", { ascending: false });
+      if (!error) setDonations(data || []);
+    };
+    fetchDonations();
+  }, []);
+
+  return (
+
+{donations.length === 0 ? (
+
+You haven’t made any donations yet.
+
+{d.image_url ? (
+
+No Image
+
+NGO:
+
+{
+    localStorage.clear();
+    window.location.href = "/auth";
+  };
+
+  return (
+
+Explore NGOs
+
+Notifications
+
+My Profile
+
+{/* Main Dashboard */}
+
+Here’s a snapshot of your donation journey and contributions.
+
+{/* Stats Section */}
+
+5
+                ? "Silver"
+                : "Bronze"}
+
+{/* Recent Donations Table */}
+
+Loading your donations...
+
+Quantity / Amount
+
+View All →
+
+{
+    // TODO: Replace with Supabase fetch logic later
+    setDonations([
+      {
+        id: "1",
+        category: "Clothes",
+        description: "Winter jackets and sweaters",
+        status: "Pending",
+        created_at: "2025-11-10",
+      },
+      {
+        id: "2",
+        category: "Books",
+        description: "Old school books for children",
+        status: "Completed",
+        created_at: "2025-11-08",
+      },
+    ]);
+  }, []);
+
+  return (
+
+{index + 1}
+
+{d.created_at}
+
+();
+  const navigate = useNavigate();
+  const [donation, setDonation] = useState
+
+(null);
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [quantity, setQuantity] = useState
+
+(1);
+  const [amount, setAmount] = useState
+
+{
+    e.preventDefault();
+    if (!donation) return;
+    if (donation.status !== "Pending") return alert("Cannot edit after NGO accepts.");
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("donations").update({
+        category, description, quantity, amount: category === "Money" ? amount : null, updated_at: new Date()
+      }).eq("id", donation.id);
+      if (error) throw error;
+
+      await supabase.from("donation_events").insert({
+        donation_id: donation.id,
+        event: "Edited by donor",
+        note: "Donor updated donation details"
+      });
+
+      alert("Updated.");
+      navigate(`/donor/details/${donation.id}`);
+    } catch (err: any) {
+      alert(err.message || "Failed to save.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return
+
+;
+
+  if (!donation) return
+
+;
+
+  return (
+
+Edit Donation
+
+--select--
+
+Electronics
+
+Clothes
+
+Books
+
+Stationeries
+
+Housing Staffs
+
+Money
+
+{category !== "Money" ? (
+
+Amount (₹)
+
+{saving ? "Saving..." : "Save"}
+
+{
+  const [favorites, setFavorites] = useState
+
+{
+    if (sort === "recent") return b.created_at.localeCompare(a.created_at);
+    return a.ngos.name.localeCompare(b.ngos.name);
+  });
+
+  return (
+
+My Favorite NGOs
+
+{/* Sort Dropdown */}
+
+Sort: Recently Added
+
+Sort: A → Z (Name)
+
+{/* Loading */}
+        {loading && (
+
+Loading favorites...
+
+)}
+
+        {/* Empty State */}
+        {!loading && favorites.length === 0 && (
+
+You haven't added any favorites yet.
+
+Browse NGOs →
+
+)}
+
+        {/* Favorites Grid */}
+
+{
+            const ngo = fav.ngos;
+
+            return (
+
+{/* Image */}
+
+{/* Name */}
+
+{/* Rating */}
+
+{ngo.rating || "0"} ({ngo.total_reviews || 0})
+
+{/* Location */}
+
+{/* Website */}
+                    {ngo.website && (
+
+Visit Website
+
+View Profile
+
+);
+          })}
+
+();
+
+  const [ngo, setNgo] = useState
+
+(null);
+  const [gallery, setGallery] = useState
+
+{
+    if (role !== "donor") return alert("Only donors can review!");
+    if (alreadyReviewed) return alert("You already reviewed this NGO!");
+    if (rating === 0) return alert("Select a rating!");
+    if (reviewText.trim().length
+
+{
+    if (!donorLocation.lat || !ngo?.latitude) return null;
+
+    const R = 6371;
+    const dLat = ((ngo.latitude - donorLocation.lat) * Math.PI) / 180;
+    const dLon = ((ngo.longitude - donorLocation.lng) * Math.PI) / 180;
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(donorLocation.lat * (Math.PI / 180)) *
+        Math.cos(ngo.latitude * (Math.PI / 180)) *
+        Math.sin(dLon / 2) ** 2;
+
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  })();
+
+  if (loading) return
+
+Loading NGO...
+
+;
+  if (!ngo) return
+
+NGO Not Found
+
+{ngo.name}
+            {ngo.verified &&
+
+{/* FAVORITE BUTTON */}
+
+{isFav ? "♥ Favorited" : "♡ Add to Favorites"}
+
+{/* MAIN IMAGE + DETAILS */}
+
+{ngo.address}, {ngo.city}, {ngo.state}, {ngo.country}
+
+{distance && (
+
+📍 {distance.toFixed(1)} km away
+
+Email: {ngo.email}
+
+Phone: {ngo.phone || " Not provided"}
+
+{ngo.website &&
+
+}
+              {ngo.facebook &&
+
+}
+              {ngo.instagram &&
+
+}
+              {ngo.twitter &&
+
+{/* MAP */}
+        {ngo.latitude && ngo.longitude && (
+
+)}
+
+        {/* ABOUT */}
+
+About
+
+{ngo.description || "No description available"}
+
+{/* GALLERY */}
+
+))
+          ) : (
+
+No gallery images uploaded.
+
+{/* REVIEWS */}
+        {/* REVIEWS HEADER WITH AVG RATING */}
+
+{/* ⭐ Average Rating */}
+
+a + b.rating, 0) / reviews.length).toFixed(1)
+        : "0.0")}
+
+{reviews.length} total review(s)
+
+{/* ⭐ Rating Breakdown Bars */}
+
+r.rating === star).length;
+      const percent = reviews.length ? (count / reviews.length) * 100 : 0;
+
+      return (
+
+{star} ★
+
+{count}
+
+);
+    })}
+
+{/* WRITE REVIEW */}
+        {role === "donor" && !alreadyReviewed && (
+
+Write a Review
+
+{/* Stars */}
+
+setRating(s)}
+                  className={`cursor-pointer ${
+                    s
+
+{/* Text */}
+
+Submit Review
+
+)}
+
+        {alreadyReviewed && (
+
+✔ You already reviewed this NGO
+
+)}
+
+        {/* Existing Reviews */}
+        {reviews.length === 0 &&
+
+{r.donors?.name || "Anonymous"}
+
+{r.rating}
+
+{
+  const donor = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const [ngos, setNgos] = useState
+
+([]);
+  const [filteredNgos, setFilteredNgos] = useState
+
+([]);
+  const [selectedNgo, setSelectedNgo] = useState
+
+(null);
+  const [messages, setMessages] = useState
+
+([]);
+  const [newMsg, setNewMsg] = useState("");
+  const [search, setSearch] = useState("");
+  const [typing, setTyping] = useState(false);
+  const [ngoTyping, setNgoTyping] = useState(false);
+
+  const navigate = useNavigate();
+  const endRef = useRef
+
+n.name.toLowerCase().includes(search.toLowerCase()))
+    );
+  }, [search, ngos]);
+
+  return (
+
+{/* LEFT – NGO LIST */}
+
+{/* NGO LIST */}
+
+{ngo.unread && (
+
+{ngo.last_message || "No messages yet"}
+
+{ngo.last_time &&
+                    new Date(ngo.last_time).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+
+{/* RIGHT – CHAT */}
+
+{!selectedNgo ? (
+
+Select an NGO to start chatting
+
+{/* Top header */}
+
+{selectedNgo.name}
+
+● Online
+
+{/* CHAT BOX */}
+
+{new Date(m.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+
+                        {m.sender_id === donor.id &&
+                          (m.read_status ? (
+
+))}
+
+                {/* Typing */}
+                {ngoTyping && (
+
+NGO is typing…
+
+{/* INPUT BOX */}
+
+{
+  const [loading, setLoading] = useState(true);
+  const [donations, setDonations] = useState
+
+([]);
+  const [impact, setImpact] = useState
+
+({
+    total_donations: 0,
+    total_value: 0,
+    ngos_helped: 0,
+    donor_level: "Bronze",
+    progress_percent: 0,
+    top_category: "-",
+    recent_donation_date: "-",
+    best_day: "-",
+    streak: 0,
+    highest_donation: 0,
+    most_active_month: "-",
+  });
+
+  const [monthlyData, setMonthlyData] = useState
+
+([]);
+  const [categoryData, setCategoryData] = useState
+
+([]);
+  const [calendarData, setCalendarData] = useState
+
+b[1] - a[1])[0]?.[0] || "-";
+
+      // streak
+      const sortedDates = Object.keys(calendar).sort();
+      let streak = 0;
+      let maxStreak = 0;
+
+      for (let i = 1; i
+
+Number(d.amount || 0)),
+        0
+      );
+
+      // ------------------------------
+      // Final set state
+      // ------------------------------
+      setImpact({
+        total_donations: total,
+        total_value: totalValue,
+        ngos_helped: ngosHelped,
+        donor_level: donorLevel,
+        progress_percent: progress,
+        top_category: topCategory,
+        recent_donation_date: recent,
+        best_day: bestDay,
+        streak: maxStreak,
+        highest_donation: highestDonation,
+        most_active_month: mostActiveMonth || "-",
+      });
+
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
+
+  if (loading)
+    return (
+
+Loading impact...
+
+My Donation Impact
+
+{/* GRID STATS */}
+
+{/* PROGRESS BAR */}
+
+Progress to Next Level
+
+{/* ADVANCED INSIGHTS */}
+
+Donations by Category
+
+{categoryData.length === 0 ? (
+
+No category data available
+
+{/* MONTHLY BAR CHART */}
+
+Monthly Donations
+
+{
+  const [notes, setNotes] = useState
+
+x.id === id ? { ...x, is_read: true } : x));
+  };
+
+  if (loading) return
+
+{notes.length === 0 ?
+
+No notifications.
+
+{n.message}
+
+{new Date(n.created_at).toLocaleString()}
+
+{!n.is_read &&
+
+Mark read
+
+{
+        alert("Payment Successful ✔");
+
+        // 👉 1. Update campaign amount
+        await supabase
+          .from("ngo_campaigns")
+          .update({
+            raised_amount: campaign.raised_amount + Number(amount),
+          })
+          .eq("id", campaign.id);
+
+        // 👉 2. Save donation
+        await supabase.from("campaign_donations").insert({
+          campaign_id: campaign.id,
+          donor_id: donor?.id || null,
+          amount: Number(amount),
+          order_id: response.razorpay_order_id,
+          payment_id: response.razorpay_payment_id,
+          status: "SUCCESS",
+        });
+
+        loadCampaigns();
+      },
+
+      theme: { color: "#2563eb" },
+    };
+
+    // @ts-ignore
+    const rzp = new Razorpay(options);
+    rzp.open();
+  };
+
+  return (
+
+Loading campaigns...
+
+{c.image_url && (
+
+Goal: ₹{Number(c.goal_amount).toLocaleString()}
+
+Raised: ₹{Number(c.raised_amount).toLocaleString()} ({Math.round(progress)}%)
+
+{
+  const [donor, setDonor] = useState
+
+(null);
+  const [editMode, setEditMode] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState
+
+{
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setDonor(parsed);
+      setPreview(parsed.image_url || null);
+    }
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent
+
+{
+    setDonor({ ...donor, [e.target.name]: e.target.value });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent
+
+{
+    try {
+      const { error } = await supabase
+        .from("donors")
+        .update({
+          name: donor.name,
+          city: donor.city || null,
+        })
+        .eq("id", donor.id);
+
+      if (error) throw error;
+
+      localStorage.setItem("user", JSON.stringify(donor));
+      alert("✅ Profile updated successfully!");
+      setEditMode(false);
+    } catch (err: any) {
+      alert("❌ Update failed: " + err.message);
+    }
+  };
+
+  return (
+
+{donor ? (
+
+{/* Profile Picture */}
+
+{uploading &&
+
+Uploading...
+
+{/* Profile Info */}
+
+City
+
+{editMode ? (
+
+Save
+
+Loading profile...
+
+{
+  const navigate = useNavigate();
+  const [donor, setDonor] = useState
+
+{
+    if (confirm("Are you sure you want to log out?")) {
+      localStorage.clear();
+      navigate("/auth");
+    }
+  };
+
+  //-----------------------------------------
+  // JSX STARTS HERE
+  //-----------------------------------------
+  return (
+
+{/* MAIN CARD */}
+
+{/* Profile Section */}
+
+{!editMode ? (
+
+{donor?.name}
+
+{donor?.email}
+
+Edit Profile
+
+Save Changes
+
+{/* Security */}
+
+Security
+
+Change Password
+
+{/* Notifications */}
+
+{/* Theme */}
+
+Appearance
+
+Light
+
+Dark
+
+System
+
+{/* Danger Zone */}
+
+Danger Zone
+
+Delete My Account
+
+{/* Logout */}
+
+{
+  const [enabled, setEnabled] = useState(true);
+
+  return (
+
+([]);
+  const [gallery, setGallery] = useState
+
+({});
+  const [reviews, setReviews] = useState
+
+({});
+  const [search, setSearch] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+
+  // Donor location
+  const [donorLocation, setDonorLocation] = useState
+
+{
+    const matchesSearch =
+      ngo.name.toLowerCase().includes(search.toLowerCase()) ||
+      ngo.email.toLowerCase().includes(search.toLowerCase());
+
+    const matchesCity = cityFilter ? ngo.city === cityFilter : true;
+    const matchesVerified = verifiedOnly ? ngo.verified : true;
+
+    let matchesDistance = true;
+
+    if (distanceFilter && donorLocation.lat && ngo.latitude) {
+      const maxDist = parseInt(distanceFilter);
+      const dist = calcDistance(donorLocation.lat, donorLocation.lng!, ngo.latitude, ngo.longitude);
+
+      matchesDistance = dist
+
+(out[r.rating] = (out[r.rating] || 0) + 1));
+    return out;
+  };
+
+  return (
+
+🌍 Discover NGOs
+
+← Back
+
+{/* SEARCH */}
+
+{/* FILTERS */}
+
+{/* City */}
+
+Filter by City
+
+{city}
+
+{/* Verified */}
+
+{verifiedOnly ? "✔ Verified Only" : "Show Verified Only"}
+
+{/* Distance */}
+
+Sort by Distance
+
+Within 5 km
+
+Within 10 km
+
+Within 25 km
+
+Within 50 km
+
+{/* Reset */}
+
+Reset Filters
+
+) : filteredNGOs.length === 0 ? (
+
+No NGOs found.
+
+{
+              const ratings = reviews[ngo.id] || [];
+              const breakdown = getStarBreakdown(ratings);
+
+              return (
+
+{ngo.name}
+                        {ngo.verified &&
+
+{/* RATING */}
+
+{/* Rating Stars Breakdown */}
+
+{s}★
+
+{breakdown[s]}
+
+{distanceFilter && ngo._distance && (
+
+📍 {ngo._distance.toFixed(1)} km away
+
+)}
+
+                      {ngo.website && (
+
+{/* Small map */}
+                  {ngo.latitude && ngo.longitude && (
+
+)}
+
+                  {/* Gallery */}
+
+No gallery items.
+
+View Full Profile →
+
+f.q.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+
+Frequently Asked
+
+Questions
+
+Find answers to common questions about donations, NGOs, volunteers, and the DenaSetu platform.
+
+{/* FAQ List */}
+
+{faq.q}
+
+{faq.a}
+
+No results found for your question.
+
+Works
+
+A simple and transparent platform that connects donors, volunteers, and NGOs 
+          to create real, measurable impact.
+
+{/* STEPS */}
+
+{/* STEP CARD TEMPLATE */}
+        {[
+          {
+            title: "Join the Platform",
+            icon:
+
+,
+            text: "Create an account as a Donor or Volunteer. Set up your profile and start contributing instantly.",
+          },
+          {
+            title: "Discover Nearby NGOs",
+            icon:
+
+,
+            text: "Explore verified NGOs near you, understand their needs, and choose where you want to help.",
+          },
+          {
+            title: "Donate or Volunteer",
+            icon:
+
+,
+            text: "Donate items, funds, or your time. All contributions are tracked securely in your dashboard.",
+          },
+          {
+            title: "Track Your Impact",
+            icon:
+
+,
+            text: "Monitor donation progress — from pickup, delivery, NGO verification, to beneficiary feedback.",
+          },
+          {
+            title: "Verified & Transparent",
+            icon:
+
+{step.icon}
+
+{`${idx + 1}. ${step.title}`}
+
+{step.text}
+
+{/* IMAGE / ILLUSTRATION */}
+
+A Community Built on Trust
+
+DenaSetu empowers giving by making it simple and meaningful.
+              Our system ensures transparency at every step — connecting people who wish to help with NGOs that truly need support.
+
+{/* FAQ SECTION */}
+
+Frequently Asked Questions
+
+{/* CTA */}
+
+Get Started
+
+categoryFrequency[b] - categoryFrequency[a]
+      )[0] || "N/A";
+
+    // 4️⃣ SET FINAL STATS
+    setStats({
+      totalDonations: donationData?.length || 0, // Only COMPLETED donations count as impact
+      totalNGOs: ngos?.length || 0,
+      totalDonors: donors?.length || 0,
+      totalVolunteers: volunteers?.length || 0,
+      totalCities: uniqueCities.size || 0,
+      topCategory,
+    });
+  };
+
+  return (
+
+🌟 Impact Stories
+
+Real moments of kindness—powered by donors, volunteers, and NGOs working together.
+
+{/* GLOBAL STATISTICS */}
+
+{stats.totalDonations}+
+
+Completed Donations
+
+{stats.totalDonors}+
+
+Donors
+
+{stats.totalNGOs}+
+
+Partner NGOs
+
+{stats.totalVolunteers}+
+
+{stats.topCategory}
+
+Top Donation Category
+
+{/* IMPACT STORY CARDS */}
+
+{stories.length === 0 && (
+
+No impact stories yet.
+
+{/* IMAGE */}
+              {story.image_url && (
+
+{story.category} Donation Impact
+
+{story.ngos?.name} — {story.ngos?.city}
+
+{story.description || "A generous donation made a meaningful impact."}
+
+{story.ngo_feedback && (
+
+“{story.ngo_feedback}”
+
+)}
+
+                {story.donor_rating && (
+
+Date: {new Date(story.created_at).toLocaleDateString()}
+
+{/* All sections already animated */}
+
+{/* CTA SECTION */}
+
+Ready to Make a Difference?
+
+Join thousands of donors and NGOs working together to create positive change.
+
+{/* FOOTER */}
+
+{/* Brand Info */}
+
+Connecting communities with local NGOs to create meaningful impact through donations.
+
+{/* Quick Links */}
+
+Quick Links
+
+How it Works
+
+NGO Registration
+
+Impact Stories
+
+{/* Categories */}
+
+Categories
+
+Education
+
+Healthcare
+
+Shelter Support
+
+Emergency Relief
+
+{/* Support */}
+
+Support
+
+Privacy Policy
+
+Terms of Service
+
+{/* Bottom */}
+
+&copy; {new Date().getFullYear()} DenaSetu. Making local impact through community donations.
+
+({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.12, duration: 0.5 },
+    }),
+  };
+
+  return (
+
+{/* HEADING */}
+
+Nearby NGOs
+
+Automatically sorted by closest to you.
+
+))
+          )}
+
+{/* DETAILS */}
+
+{ngo.name}
+                    {ngo.verified && (
+
+{ngo.city || "Unknown"}
+
+{ngo.distance && (
+
+📍 {ngo.distance.toFixed(1)} km
+
+)}
+
+                    {ngo.rating && (
+
+{ngo.rating}/5 ({ngo.total_reviews})
+
+{/* BUTTON */}
+
+{user ? "View" : "Sign Up"}
+
+{/* VIEW ALL */}
+
+{
+    const { data } = await supabase
+      .from("ngos")
+      .select("id, name, city, state, description, verified, total_reviews, rating, image_url")
+      .order("created_at", { ascending: false });
+
+    setNgos(data || []);
+  };
+
+  return (
+
+{ngo.name}
+                  {ngo.verified && (
+
+{ngo.description || "No description provided"}
+
+{
+    setLoading(true);
+
+    const { data } = await supabase
+      .from("campaign_donations")
+      .select("*, donors(id, name, email, image_url)")
+      .eq("campaign_id", id)
+      .order("created_at", { ascending: false });
+
+    setDonations(data || []);
+    setLoading(false);
+  };
+
+  return (
+
+{/* BACK BUTTON */}
+
+Campaign Donors
+
+Loading donors...
+
+No donations received yet.
+
+{/* Donor Image */}
+                  {d.donors?.image_url ? (
+
+)}
+
+                  {/* Donor Info */}
+
+{d.donors?.name || "Unknown Donor"}
+
+{d.donors?.email}
+
+{/* Donation Info */}
+
+Amount:
+
+{" "}
+
+₹{Number(d.amount).toLocaleString()}
+
+Payment ID:
+
+{d.payment_id}
+
+Order ID:
+
+{d.order_id}
+
+Date:
+
+{" "}
+                    {new Date(d.created_at).toLocaleString()}
+
+{
+    if (!form.title || !form.description || !form.goal_amount) {
+      alert("All fields are required.");
+      return;
+    }
+
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("ngo_campaigns")
+      .update({
+        title: form.title,
+        description: form.description,
+        goal_amount: Number(form.goal_amount),
+        image_url: form.image_url,
+      })
+      .eq("id", id);
+
+    setSaving(false);
+
+    if (error) {
+      alert("Failed to update campaign!");
+      return;
+    }
+
+    alert("Campaign updated successfully!");
+    navigate("/ngo/campaigns");
+  };
+
+  if (loading) {
+    return
+
+Loading campaign...
+
+;
+  }
+
+  /* ---------------------------- UI ---------------------------- */
+  return (
+
+Edit Campaign
+
+Campaign Image
+
+{form.image_url ? (
+
+No image uploaded yet.
+
+{/* TITLE */}
+
+Title
+
+{/* GOAL AMOUNT */}
+
+Goal Amount (₹)
+
+{/* SAVE BUTTON */}
+
+(null);
+  const [donations, setDonations] = useState
+
+{
+    setLoading(true);
+
+    // 1️⃣ Load campaign
+    const { data: campaignData } = await supabase
+      .from("ngo_campaigns")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    setCampaign(campaignData);
+
+    // 2️⃣ Load donations + donor info
+    const { data: donationList } = await supabase
+      .from("campaign_donations")
+      .select("*, donors(name, email, image_url)")
+      .eq("campaign_id", id)
+      .order("created_at", { ascending: false });
+
+    setDonations(donationList || []);
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+
+Loading campaign history...
+
+{campaign?.title}
+
+{campaign?.description}
+
+No donations yet.
+
+{d.donors?.image_url ? (
+
+Payment ID: {d.payment_id || "—"}
+
+{new Date(d.created_at).toLocaleTimeString()}
+
+c.status === filter);
+
+  return (
+
+Manage Campaigns
+
+All Campaigns
+
+Active
+
+Paused
+
+{/* Empty / Loading */}
+        {loading ? (
+
+0
+                  ? Math.min(
+                      (Number(c.raised_amount) / Number(c.goal_amount)) * 100,
+                      100
+                    )
+                  : 0;
+
+              return (
+
+{/* Progress */}
+
+Raised: ₹{Number(c.raised_amount).toLocaleString()} (
+                      {Math.round(progress)}%)
+
+{/* Status Badge */}
+
+{c.status}
+
+{/* Action Buttons */}
+
+{/* Pause */}
+                      {c.status === "Active" && (
+
+Pause
+
+)}
+
+                      {/* Resume */}
+                      {c.status === "Paused" && (
+
+Resume
+
+)}
+
+                      {/* Complete */}
+                      {c.status !== "Completed" && (
+
+)}
+
+                      {/* History */}
+
+History
+
+{/* Edit */}
+
+{/* Donors */}
+
+{/* Share */}
+
+Share
+
+{/* Delete */}
+
+{
+    e.preventDefault();
+    setLoading(true);
+
+    const ngo = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const imageUrl = await handleUpload();
+
+    const { error } = await supabase.from("ngo_campaigns").insert({
+      ngo_id: ngo.id,
+      title: form.title,
+      description: form.description,
+      goal_amount: Number(form.goal_amount),
+      status: "Active",
+      image_url: imageUrl,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      alert("❌ Error: " + error.message);
+    } else {
+      alert("✅ Campaign created successfully!");
+      navigate("/ngo/campaigns");
+    }
+  };
+
+  return (
+
+{/* Image Upload */}
+
+Upload Campaign Banner
+
+{image && (
+
+Selected: {image.name}
+
+{loading ?
+
+} 
+          Create Campaign
+
+{
+  const [stats, setStats] = useState({
+    totalDonations: 0,
+    totalVolunteers: 0,
+    activeCampaigns: 0,
+    totalMoneyReceived: 0,
+    moneyDonors: 0,
+    pendingDonations: 0,
+    completedDonations: 0,
+    assignedDonations: 0,
+  });
+
+  const [ngoName, setNgoName] = useState("Your NGO");
+  const [recentDonations, setRecentDonations] = useState
+
+d.status === "Completed").length || 0;
+
+      // 🟩 VOLUNTEERS COUNT
+      const { count: volunteerCount } = await supabase
+        .from("volunteer_assignments")
+        .select("volunteer_id", { count: "exact", head: true })
+        .eq("ngo_id", ngo.id);
+
+      // 🟦 CAMPAIGNS COUNT
+      const { count: campaignCount } = await supabase
+        .from("ngo_campaigns")
+        .select("id", { count: "exact", head: true })
+        .eq("ngo_id", ngo.id)
+        .eq("status", "Active");
+
+      // 🟦 RECENT DONATIONS LIST
+      const { data: recent } = await supabase
+        .from("donations")
+        .select("id, donor_id, amount, category, status, created_at")
+        .eq("ngo_id", ngo.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      setStats({
+        totalDonations: donations?.length || 0,
+        totalVolunteers: volunteerCount || 0,
+        activeCampaigns: campaignCount || 0,
+        totalMoneyReceived,
+        moneyDonors,
+        pendingDonations: pending,
+        assignedDonations: assigned,
+        completedDonations: completed,
+      });
+
+      setRecentDonations(recent || []);
+      setNgoName(ngo.name || "Your NGO");
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [ngo.id]);
+
+  if (loading)
+    return (
+
+Loading dashboard...
+
+);
+
+  return (
+
+NGO Panel
+
+{item.icon} {item.label}
+
+Welcome, {ngoName}
+
+Manage your donations, volunteers, campaigns & more.
+
+{/* Secondary Stats */}
+
+{/* Quick Actions */}
+
+{recentDonations.length === 0 ? (
+
+No recent donations.
+
+{
+  const bg = {
+    yellow: "bg-yellow-100 text-yellow-700",
+    green: "bg-green-100 text-green-700",
+    indigo: "bg-indigo-100 text-indigo-700",
+    gray: "bg-gray-100 text-gray-700",
+  }[color];
+
+  return (
+
+{
+  const map: any = {
+    Completed: "bg-green-100 text-green-700",
+    Pending: "bg-yellow-100 text-yellow-700",
+    Assigned: "bg-purple-100 text-purple-700",
+    Cancelled: "bg-red-100 text-red-700",
+  };
+
+  return (
+
+);
+};
+
+/* -------- SIDEBAR LINKS ---------- */
+
+const sidebarLinks = [
+  { to: "/ngo/dashboard", label: "Dashboard", icon:
+
+},
+  { to: "/ngo/manage", label: "Manage Donations", icon:
+
+},
+  { to: "/ngo/money-received", label: "Money Received", icon:
+
+},
+  { to: "/ngo/needs", label: "Needed Items", icon:
+
+},
+  { to: "/ngo/pending", label: "Pending Donations", icon:
+
+},
+  { to: "/ngo/volunteers", label: "Volunteers", icon:
+
+},
+  { to: "/ngo/campaigns", label: "Campaigns", icon:
+
+},
+  { to: "/ngo/messages", label: "Messages", icon:
+
+},
+  { to: "/ngo/gallery", label: "Gallery", icon:
+
+},
+  { to: "/ngo/profile", label: "Profile", icon:
+
+},
+  { to: "/ngo/logout", label: "Logout", icon:
+
+},
+];
+
+/* -------- QUICK ACTIONS ---------- */
+
+const quickLinks = [
+  { to: "/ngo/create", label: "Create Campaign", bg: "bg-blue-600", icon:
+
+},
+  { to: "/ngo/manage", label: "Manage Donations", bg: "bg-green-600", icon:
+
+},
+  { to: "/ngo/needs", label: "Needed Items", bg: "bg-orange-600", icon:
+
+},
+  { to: "/ngo/volunteers", label: "Volunteers", bg: "bg-purple-600", icon:
+
+},
+  { to: "/ngo/money-received", label: "Money Received", bg: "bg-teal-600", icon:
+
+},
+  { to: "/ngo/gallery", label: "Gallery", bg: "bg-pink-600", icon:
+
+},
+  { to: "/ngo/reports", label: "Reports", bg: "bg-gray-600", icon:
+
+},
+  { to: "/ngo/posts", label: "Announcements", bg: "bg-indigo-600", icon:
+
+{
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("donations")
+        .select("*, donors(name, email, image_url)")
+        .eq("id", id)
+        .single();
+      if (!error) setDonation(data);
+
+      const { data: ev } = await supabase
+        .from("donation_events")
+        .select("*")
+        .eq("donation_id", id)
+        .order("created_at", { ascending: true });
+      setEvents(ev || []);
+
+      if (data?.assigned_volunteer) {
+        const { data: vol } = await supabase
+          .from("volunteers")
+          .select("name, email")
+          .eq("id", data.assigned_volunteer)
+          .single();
+        setVolunteer(vol);
+      }
+      setLoading(false);
+    };
+    loadData();
+  }, [id]);
+
+  if (loading)
+    return (
+
+Donation not found
+
+Donation Details (NGO View)
+
+{donation.amount ? `₹${donation.amount}` : donation.quantity}
+
+Created At
+
+{new Date(donation.created_at).toLocaleString()}
+
+{/* Donor Info */}
+
+Donor Information
+
+{donation.donors?.image_url ? (
+
+{donation.donors?.name?.[0]}
+
+{donation.donors?.name}
+
+{donation.donors?.email}
+
+{/* Volunteer Info */}
+        {volunteer && (
+
+{volunteer.email}
+
+)}
+
+        {/* Timeline */}
+
+{events.length === 0 ? (
+
+No events recorded yet.
+
+([]);
+  const [file, setFile] = useState
+
+(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState
+
+(null);
+  const [deleteConfirm, setDeleteConfirm] = useState
+
+{
+    await supabase.from("ngo_gallery").delete().eq("id", id);
+    setDeleteConfirm(null);
+    fetchGallery();
+  };
+
+  return (
+
+NGO Gallery
+
+{/* UPLOAD SECTION */}
+
+Upload New Media
+
+}
+          {loading ? "Uploading..." : "Upload"}
+
+{/* GALLERY DISPLAY */}
+
+{item.media_type === "image" ? (
+
+{item.title || "Untitled"}
+
+{item.description || "No description"}
+
+{/* DELETE BUTTON */}
+
+{/* DELETE CONFIRMATION POPUP */}
+            {deleteConfirm === item.id && (
+
+Delete this media?
+
+{gallery.length === 0 && (
+
+No media uploaded yet.
+
+{
+  const [impact, setImpact] = useState
+
+({ category: k, amount: v })));
+    };
+    fetchData();
+  }, []);
+
+  return (
+
+📊 NGO Impact Analysis
+
+{impact.length === 0 ? (
+
+No completed donations yet.
+
+{
+    localStorage.removeItem("user");
+    alert("You have been logged out successfully!");
+    navigate("/auth");
+  }, []);
+
+  return (
+
+Logging out...
+
+([]);
+  const [volunteers, setVolunteers] = useState
+
+([]);
+  const [loading, setLoading] = useState(true);
+  const [assigning, setAssigning] = useState
+
+(null);
+  const [feedback, setFeedback] = useState
+
+{
+    await supabase
+      .from("donations")
+      .update({
+        status: "Completed",
+        delivered_at: new Date(),
+        updated_at: new Date(),
+        ngo_feedback: feedback[id] || null,
+      })
+      .eq("id", id);
+
+    await supabase.from("donation_events").insert({
+      donation_id: id,
+      event: "Completed",
+      note: feedback[id] || null,
+      created_by: ngo.id,
+    });
+
+    alert("🎉 Donation marked as completed!");
+    fetchDonations();
+  };
+
+  return (
+
+📦 Manage Donations
+
+No donations available right now.
+
+Image
+
+Donor Details
+
+{/* DONOR INFO */}
+
+{d.donors?.name}
+
+📞 {d.donors?.phone || "N/A"}
+
+📍 {d.donors?.address || "No address"}
+
+{d.amount ? `₹${d.amount}` : d.quantity || "—"}
+
+{/* STATUS */}
+
+{/* ACTIONS */}
+
+{d.status === "Pending" && (
+
+)}
+
+                      {d.status === "Accepted" && (
+
+Assign Volunteer
+
+)}
+
+                      {d.status === "Assigned" && (
+
+Mark Completed
+
+)}
+
+                      {d.status === "Completed" && (
+
+{
+  const ngo = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const [donors, setDonors] = useState
+
+([]);
+  const [filteredDonors, setFilteredDonors] = useState
+
+([]);
+  const [selectedDonor, setSelectedDonor] = useState
+
+(null);
+
+  const [messages, setMessages] = useState
+
+([]);
+  const [newMsg, setNewMsg] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typing, setTyping] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef
+
+{
+    const isMine = msg.sender_id === ngo.id;
+
+    // Image message (img:https://)
+    if (msg.message.startsWith("img:")) {
+      const url = msg.message.replace("img:", "");
+      return (
+
+);
+    }
+
+    // Voice note (audio:)
+    if (msg.message.startsWith("audio:")) {
+      return (
+
+Voice Message
+
+);
+    }
+
+    return
+
+{msg.message}
+
+;
+  };
+
+  /* ------------------------------------------------------------
+     BLUE THEME STYLING
+  ------------------------------------------------------------ */
+  return (
+
+{/* LEFT — Inbox */}
+
+Chats
+
+{d.unread && (
+
+{d.last_message}
+
+{/* RIGHT — Chat Window */}
+
+{!selectedDonor ? (
+
+Select a donor to chat
+
+{/* CHAT HEADER */}
+
+{selectedDonor.name}
+
+{/* CHAT BODY */}
+
+{
+                  const isMine = msg.sender_id === ngo.id;
+
+                  return (
+
+{renderMessageBubble(msg)}
+
+                        {/* TIME + TICKS */}
+
+{new Date(msg.created_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+
+                          {isMine &&
+                            (msg.read_status ? (
+
+);
+                })}
+
+                {/* TYPING */}
+                {typing && (
+
+Typing…
+
+{/* INPUT BAR */}
+
+sum + Number(d.amount || 0),
+      0
+    );
+
+    setTotal(totalAmount || 0);
+  };
+
+  return (
+
+💰 Money Received Summary
+
+Total Donations Received:
+
+₹{total}
+
+All Donors
+
+Donor Name
+
+{list.length === 0 && (
+
+No money donations yet.
+
+{item.donors?.name || "Unknown"}
+
+{item.donors?.email}
+
+₹{item.amount}
+
+{item.category}
+
+{new Date(item.created_at).toLocaleDateString()}
+
+{
+  const ngo = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const [needs, setNeeds] = useState
+
+{
+    if (!form.title || !form.category) {
+      alert("Category & title are required!");
+      return;
+    }
+
+    await supabase.from("ngo_needs").insert({
+      ngo_id: ngo.id,
+      ...form,
+      quantity: Number(form.quantity),
+    });
+
+    setForm({ category: "", title: "", description: "", quantity: "", urgency: "medium" });
+    loadNeeds();
+  };
+
+  return (
+
+📦 Needed Items
+
+{/* Add Need Form */}
+
+➕ Add New Required Item
+
+Low Urgency
+
+Medium Urgency
+
+High Urgency
+
+Add Item
+
+{/* Needs List */}
+
+📋 Current Needed Items
+
+Loading...
+
+) : needs.length === 0 ? (
+
+No items listed.
+
+{need.title}
+
+{need.description}
+
+Category:
+
+{need.category}
+
+Quantity:
+
+{
+  const map: any = {
+    high: "bg-red-100 text-red-700",
+    medium: "bg-yellow-100 text-yellow-700",
+    low: "bg-green-100 text-green-700",
+  };
+
+  return (
+
+{urgency.toUpperCase()}
+
+d.id !== id));
+  };
+
+  return (
+
+Pending Donations
+
+Loading donations...
+
+No pending donations.
+
+{/* Details */}
+
+{d.amount && (
+
+{" "}
+                        ₹{d.amount}
+
+)}
+                    {d.quantity && (
+
+{" "}
+                        {d.quantity}
+
+{d.donors?.name} ({d.donors?.email})
+
+{/* Date */}
+
+{new Date(d.created_at).toLocaleString()}
+
+{
+  const ngo = JSON.parse(localStorage.getItem("user") || "{}");
+  const [posts, setPosts] = useState
+
+{
+    await supabase.from("ngo_posts").delete().eq("id", id);
+    fetchPosts();
+  };
+
+  return (
+
+📢 Announcements
+
+Post Update
+
+{posts.length === 0 ? (
+
+No announcements yet.
+
+{new Date(p.created_at).toLocaleString()}
+
+{
+    const [markerPos, setMarkerPos] = useState({
+      lat: location.latitude,
+      lng: location.longitude,
+    });
+
+    useMapEvents({
+      click(e) {
+        setMarkerPos(e.latlng);
+        setLocation({
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+          accuracy: null,
+          map_source: "manual",
+        });
+      },
+    });
+
+    return (
+
+{
+    if (!ngo?.id) return alert("Invalid NGO");
+
+    let imageUrl = profile.image_url;
+    let imagePath = profile.image_path;
+
+    /* -------- IMAGE UPLOAD -------- */
+    if (imageFile) {
+      if (imagePath) {
+        await supabase.storage.from("ngo_images").remove([imagePath]);
+      }
+
+      const path = `${ngo.id}/${Date.now()}-${imageFile.name}`;
+      const upload = await supabase.storage
+        .from("ngo_images")
+        .upload(path, imageFile, { upsert: true });
+
+      if (upload.error) {
+        alert(upload.error.message);
+        return;
+      }
+
+      imagePath = path;
+      imageUrl = supabase.storage
+        .from("ngo_images")
+        .getPublicUrl(path).data.publicUrl;
+    }
+
+    /* -------- UPDATE DB -------- */
+    const { error } = await supabase
+      .from("ngos")
+      .update({
+        name: profile.name,
+        description: profile.description,
+        phone: profile.phone,
+        address: profile.address,
+        city: profile.city,
+        state: profile.state,
+        country: profile.country,
+        website: profile.website,
+        facebook: profile.facebook,
+        instagram: profile.instagram,
+        twitter: profile.twitter,
+        image_url: imageUrl,
+        image_path: imagePath,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        location_accuracy: location.accuracy,
+        map_source: location.map_source,
+        updated_at: new Date(),
+      })
+      .eq("id", ngo.id);
+
+    if (error) {
+      console.error(error);
+      alert("❌ Failed to save profile");
+    } else {
+      alert("✅ Profile updated successfully");
+      window.location.reload();
+    }
+  };
+
+  /* ================= UI ================= */
+  return (
+
+NGO Profile
+
+{/* FORM */}
+
+{/* MAP */}
+
+📍 Use GPS Location
+
+{
+  const [report, setReport] = useState
+
+[r.category, r.amount, r.status, r.created_at].join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ngo_report.csv";
+    a.click();
+  };
+
+  return (
+
+Reports & Analytics
+
+Export as CSV
+
+{report.length === 0 ? (
+
+No data found.
+
+{r.amount || "—"}
+
+{r.status}
+
+{new Date(r.created_at).toLocaleDateString()}
+
+{
+  const [reviews, setReviews] = useState
+
+{
+      const { data } = await supabase
+        .from("ngo_reviews")
+        .select("*, donors(name)")
+        .eq("ngo_id", ngo.id)
+        .order("created_at", { ascending: false });
+      setReviews(data || []);
+    };
+    fetchReviews();
+  }, []);
+
+  return (
+
+⭐ Donor Reviews
+
+{reviews.length === 0 ? (
+
+{r.donors?.name}
+
+{
+  const ngo = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const [joinedVolunteers, setJoinedVolunteers] = useState
+
+([]);
+  const [availableVolunteers, setAvailableVolunteers] = useState
+
+([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState
+
+{
+    const data = v.volunteers || v;
+
+    return (
+
+{data.name}
+
+{data.city || "Unknown"}
+
+{data.email}
+
+{" "}
+              {data.phone || "—"}
+
+{" "}
+              {data.city || "—"}
+
+j.volunteer_id === data.id) && (
+
+Send Request
+
+);
+  };
+
+  // ------------------------------------------------------------
+  // Render UI
+  // ------------------------------------------------------------
+  if (loading)
+    return
+
+{/* Joined Volunteers */}
+
+👥 Volunteers in Your NGO
+
+{v.volunteers.name}
+
+{v.volunteers.city || "—"}
+
+{/* Available Volunteers */}
+
+🟢 Available Volunteers
+
+{v.city}
+
+{selected && (
+
+Register Your NGO
+
+Join DenaSetu to connect with donors and volunteers who care about your cause.
+
+Eligibility
+
+Must be a verified non-profit or charitable organization.
+
+Provide a valid registration certificate.
+
+Include your NGO’s mission, contact info, and address.
+
+Start Registration
+
+NGOs Page Coming Soon!
+
+{
+    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+  }, [location.pathname]);
+
+  return (
+
+Oops! Page not found
+
+Return to Home
+
+, your privacy is our top priority. We collect only the necessary information to facilitate donations, verify NGOs, and enhance your experience.
+
+We do not share or sell your data to third parties. Your information is securely stored and used strictly for verified NGO partnerships and transparency purposes.
+
+You can request data deletion or account removal anytime by contacting our support team.
+
+For questions about data protection, please reach us at
+
+support@denasetu.org
+
+{
+    const { data } = await supabase
+      .from("ngo_reviews")
+      .select("rating, review, created_at")
+      .eq("ngo_id", id)
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    setReviews(data || []);
+  };
+
+  if (!ngo) return
+
+Loading NGO details...
+
+{/* IMAGE BANNER */}
+
+{ngo.verified && (
+
+✔ Verified NGO
+
+{/* NAME */}
+
+{/* LOCATION */}
+
+{ngo.city}, {ngo.state}, {ngo.country}
+
+{/* RATING */}
+      {ngo.rating && (
+
+⭐ {ngo.rating}/5 ({ngo.total_reviews} reviews)
+
+)}
+
+      {/* DESCRIPTION */}
+
+{ngo.description || "This NGO has not provided a description yet."}
+
+{/* PUBLIC INFO SECTION */}
+
+Basic Information
+
+Pincode:
+
+{ngo.pincode || "Not provided"}
+
+State:
+
+{ngo.state || "Not provided"}
+
+Country:
+
+{ngo.country || "Not provided"}
+
+{/* 🔐 FULL DETAILS ONLY FOR LOGGED-IN DONORS */}
+      {!user ? (
+
+Want Full NGO Details?
+
+Login as a donor to view full contact details, needs, gallery, and more.
+
+Login to View More
+
+) : user.role !== "donor" ? (
+
+Limited Access
+
+Only donors can view full NGO details.
+
+{/* CONTACT CARD */}
+
+{ngo.phone || "Not Provided"}
+
+Address:
+
+{ngo.address || "Not provided"}
+
+{ngo.website && (
+
+{needs.length === 0 ? (
+
+No needs listed.
+
+{item.title}
+
+{item.description}
+
+{item.quantity}
+
+Urgency:
+
+{item.urgency}
+
+This NGO has not uploaded photos yet.
+
+{/* REVIEWS */}
+
+Recent Reviews
+
+⭐ {rev.rating}
+
+{rev.review}
+
+{new Date(rev.created_at).toLocaleDateString()}
+
+. By using our platform, you agree to follow these terms. Our goal is to maintain a transparent and trustworthy donation ecosystem.
+
+Donors and NGOs are responsible for providing accurate information. Misuse, fraud, or policy violation may result in account suspension.
+
+DenaSetu reserves the right to modify, suspend, or terminate any part of the service at any time, with or without notice.
+
+For disputes or inquiries, please contact us at
+
+{
+  const volunteer = JSON.parse(localStorage.getItem("user") || "{}");
+  const [activities, setActivities] = useState
+
+!!id);
+
+      let relatedTasksMap: Record
+
+{
+    const groups: Record
+
+{
+      const d = new Date(a.created_at);
+      if (d.toDateString() === today.toDateString()) groups["Today"].push(a);
+      else if (d.toDateString() === yesterday.toDateString())
+        groups["Yesterday"].push(a);
+      else groups["Earlier"].push(a);
+    });
+
+    return groups;
+  };
+
+  const grouped = groupActivities();
+
+  if (loading)
+    return (
+
+Loading your activity...
+
+Volunteer Activity
+
+{activities.length === 0 ? (
+
+No recent activities yet.
+
+acts.length === 0 ? null : (
+
+{section}
+
+{/* Timeline Dot */}
+
+{a.action === "Task Completed" ? (
+
+) : a.action === "Task Cancelled" ? (
+
+)}
+                              {a.action}
+
+{a.details || "No additional details provided."}
+
+{/* 🧩 Related task info */}
+                            {a.related_task_info && (
+
+{a.related_task_info.donations?.category}
+
+{" "}
+                                  —{" "}
+                                  {
+                                    a.related_task_info.donations?.description
+                                  }
+
+{a.related_task_info.donations?.ngos && (
+
+NGO:{" "}
+                                    {
+                                      a.related_task_info.donations.ngos.name
+                                    }{" "}
+                                    (
+                                    {
+                                      a.related_task_info.donations.ngos.city
+                                    }
+                                    )
+
+{formatDate(a.created_at)}
+
+{
+    if (!ngo?.latitude || !ngo?.longitude) {
+      alert("NGO location not available");
+      return;
+    }
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${ngo.latitude},${ngo.longitude}`,
+      "_blank"
+    );
+  };
+
+  return (
+
+{ngo?.city}
+
+{ngo?.phone || "N/A"}
+
+{/* Donation */}
+
+{donation?.category}
+
+{donation?.description}
+
+{donation?.quantity && (
+
+Qty: {donation.quantity}
+
+{donor?.phone}
+
+{donor?.address}
+
+Assigned: {new Date(task.assigned_at).toLocaleDateString()}
+
+{task.status}
+
+{task.status === "Assigned" && (
+
+Accept Task
+
+)}
+
+        {(task.status === "Accepted" || task.status === "In Progress") && (
+
+)}
+
+        {task.status === "Accepted" && (
+
+Start Delivery
+
+)}
+
+        {task.status === "In Progress" && (
+
+Delivered
+
+)}
+
+        {task.status !== "Delivered" && (
+
+{
+  const navigate = useNavigate();
+  const volunteer = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const [tasks, setTasks] = useState
+
+t.id === assignmentId ? { ...t, status: newStatus } : t
+      )
+    );
+  };
+
+  if (loading)
+    return
+
+Loading tasks...
+
+My Assigned Tasks
+
+{tasks.length === 0 ? (
+
+No tasks assigned
+
+({
+    total_tasks: 0,
+    completed_tasks: 0,
+    active_tasks: 0,
+    ngos_helped: 0,
+    success_rate: 0,
+    performance_level: "Beginner",
+  });
+  const [recentTasks, setRecentTasks] = useState
+
+([]);
+  const [activity, setActivity] = useState
+
+0
+      ? Math.round((impact.completed_tasks / impact.total_tasks) * 100)
+      : 0;
+
+  if (loading)
+    return (
+
+Loading your dashboard...
+
+{/* 🧭 Sidebar */}
+
+Volunteer Panel
+
+{/* 🌟 Main Content */}
+
+Welcome, {volunteer.name || "Volunteer"} 👋
+
+“Small acts, when multiplied by millions, can transform the world.”
+
+View Tasks
+
+{/* 📊 Stats Section */}
+
+{/* 🧭 Progress Chart + Level */}
+
+Performance Overview
+
+Completion Rate:{" "}
+
+{progressPercent}%
+
+Current Level:{" "}
+
+{impact.performance_level}
+
+{/* 🕒 Recent Activity Section */}
+
+Recent Volunteer Activity
+
+{activity.length === 0 ? (
+
+No recent actions recorded.
+
+{a.action}
+
+{/* 🗂️ Recent Tasks Section */}
+
+Recent Assignments
+
+{recentTasks.length === 0 ? (
+
+No recent assignments yet.
+
+{
+  const colorMap: any = {
+    blue: "border-blue-600 text-blue-700",
+    green: "border-green-600 text-green-700",
+    yellow: "border-yellow-500 text-yellow-700",
+    purple: "border-purple-600 text-purple-700",
+  };
+  return (
+
+{trend && (
+
+{trend === "up" ? (
+
+{task.donations?.category}
+
+{task.donations?.description}
+
+{task.ngos?.name} ({task.ngos?.city})
+
+{
+  const volunteer = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const [ngos, setNgos] = useState
+
+([]);
+  const [joinedNgos, setJoinedNgos] = useState
+
+([]);
+  const [loading, setLoading] = useState(true);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
+  const [sortBy, setSortBy] = useState("name-asc");
+  const [selectedNgo, setSelectedNgo] = useState
+
+{
+      if (sortBy === "name-asc") return a.name.localeCompare(b.name);
+      if (sortBy === "name-desc") return b.name.localeCompare(a.name);
+      if (sortBy === "verified") return Number(b.verified) - Number(a.verified);
+      if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
+      return 0;
+    });
+
+  if (loading)
+    return
+
+🤝 Explore & Join NGOs
+
+{/* 🔍 Filters */}
+
+{/* City Filter */}
+
+All Cities
+
+{/* Sort */}
+
+Name A → Z
+
+Name Z → A
+
+Verified First
+
+{/* 🌍 NGO Cards */}
+
+{
+            const isJoined = joinedNgos.includes(ngo.id);
+
+            return (
+
+{ngo.city || "—"}
+
+⭐ {ngo.rating || 0} / 5 ({ngo.total_reviews || 0} reviews)
+
+{isJoined ? "Leave" : "Join"}
+
+{/* 📌 NGO Details Modal */}
+      {selectedNgo && (
+
+📍 {selectedNgo.city || "Not specified"}
+
+⭐ Rating: {selectedNgo.rating || 0} / 5 (
+              {selectedNgo.total_reviews || 0} reviews)
+
+{
+    if (index === 0) return "#FFD700"; // gold
+    if (index === 1) return "#C0C0C0"; // silver
+    if (index === 2) return "#CD7F32"; // bronze
+    return "transparent";
+  };
+
+  if (loading)
+    return (
+
+Loading leaderboard...
+
+Volunteer Leaderboard
+
+🕓 Updated: {new Date().toLocaleDateString()}
+
+{volunteers.length === 0 ? (
+
+No leaderboard data available yet.
+
+Rank
+
+Completed Tasks
+
+Success Rate
+
+Level
+
+{
+                  const isCurrent = v.volunteer_id === currentVolunteer.id;
+
+                  return (
+
+{/* Rank */}
+
+{i + 1}
+
+{/* Volunteer Info */}
+
+{v.volunteers?.name || "Unknown"}
+
+{v.volunteers?.city || "—"}
+
+{/* Completed Tasks */}
+
+{v.completed_tasks || 0}
+
+{/* Success Rate */}
+
+{v.success_rate
+                          ? `${Math.round(v.success_rate)}%`
+                          : "—"}
+
+{/* Performance Level */}
+
+{v.performance_level}
+
+);
+                })}
+
+{
+  const volunteer = JSON.parse(localStorage.getItem("user") || "{}");
+  const [dailyStats, setDailyStats] = useState
+
+d.action === "Task Cancelled").length,
+          total: data.length,
+        };
+
+        setDailyStats(grouped);
+        setSummary(summaryStats);
+      }
+
+      setLoading(false);
+    };
+
+    fetchStats();
+  }, [volunteer.id]);
+
+  const COLORS = ["#22c55e", "#facc15", "#ef4444"];
+
+  if (loading)
+    return (
+
+Loading reports...
+
+Volunteer Reports
+
+Data updated: {new Date().toLocaleDateString()}
+
+{/* Summary Cards */}
+
+{/* Charts Section */}
+        {dailyStats.length === 0 ? (
+
+No activity data available yet.
+
+{/* 📈 Line Chart */}
+
+Daily Activity Trend
+
+{/* 🥧 Pie Chart */}
+
+Task Breakdown
+
+{
+  const colorMap: any = {
+    blue: "text-blue-700 border-blue-600",
+    green: "text-green-700 border-green-600",
+    yellow: "text-yellow-700 border-yellow-500",
+    red: "text-red-700 border-red-600",
+  };
+  return (
+
+({
+    total_tasks: 0,
+    completed_tasks: 0,
+    active_tasks: 0,
+    ngos_helped: 0,
+    performance_level: "Beginner",
+  });
+  const [recentTasks, setRecentTasks] = useState
+
+{/* Sidebar (unchanged) */}
+
+{/* Main Content (unchanged layout) */}
+
+{/* Progress Chart + Performance */}
+
+{/* Recent Activity */}
+
+{/* Recent Tasks */}
+
+(null);
+  const [trend, setTrend] = useState
+
+({ date, count }))
+      );
+
+      setLoading(false);
+    };
+
+    fetchImpact();
+  }, []);
+
+  // SHOW LOADER
+  if (loading)
+    return (
+
+Loading your impact...
+
+);
+
+  const performanceColors: any = {
+    Beginner: "bg-gray-200 text-gray-700",
+    Active: "bg-blue-200 text-blue-700",
+    Leader: "bg-purple-200 text-purple-700",
+    Hero: "bg-green-200 text-green-800",
+  };
+
+  return (
+
+My Volunteer Impact
+
+← Back to Dashboard
+
+{/* SUCCESS RATE */}
+
+{impact.success_rate || 0}% Success
+
+{/* TREND CHART */}
+
+Weekly Task Trend
+
+{/* PERFORMANCE */}
+
+Performance Level
+
+Last Active:{" "}
+
+{new Date(impact.last_active).toLocaleString()}
+
+{
+  const colorMap: any = {
+    blue: "border-blue-600 text-blue-700",
+    green: "border-green-600 text-green-700",
+    red: "border-red-600 text-red-700",
+    purple: "border-purple-600 text-purple-700",
+  };
+
+  return (
+
+{
+      await supabase.auth.signOut();
+      localStorage.clear();
+      navigate("/auth");
+    };
+    logout();
+  }, []);
+
+  return (
+
+{
+  const volunteer = JSON.parse(localStorage.getItem("user") || "{}");
+  const [ngos, setNgos] = useState
+
+([]);
+  const [selectedNgo, setSelectedNgo] = useState("");
+  const [messages, setMessages] = useState
+
+([]);
+  const [newMsg, setNewMsg] = useState("");
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef
+
+{
+    if (!newMsg.trim() || !selectedNgo) return;
+
+    const { error } = await supabase.from("ngo_volunteer_messages").insert({
+      volunteer_id: volunteer.id,
+      ngo_id: selectedNgo,
+      message: newMsg,
+      sender_role: "volunteer",
+    });
+
+    if (error) {
+      console.error("Error sending message:", error);
+      alert("Failed to send message.");
+      return;
+    }
+
+    setNewMsg("");
+    scrollToBottom();
+
+    // Refresh messages instantly
+    const { data } = await supabase
+      .from("ngo_volunteer_messages")
+      .select("*")
+      .eq("volunteer_id", volunteer.id)
+      .eq("ngo_id", selectedNgo)
+      .order("created_at", { ascending: true });
+
+    setMessages(data || []);
+  };
+
+  if (loading)
+    return (
+
+Loading messages...
+
+Volunteer Messages
+
+{/* NGO Selection */}
+
+-- Select NGO to chat with --
+
+{selectedNgo ? (
+
+{/* Messages Box */}
+
+{messages.length === 0 ? (
+
+No messages yet. Start the conversation 👋
+
+{new Date(m.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+
+))
+              )}
+
+{/* Message Input */}
+
+Send
+
+Please select an NGO to start chatting 💬
+
+{
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const [profile, setProfile] = useState
+
+{
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("volunteers")
+      .update({
+        name: profile.name,
+        phone: profile.phone,
+        city: profile.city,
+        skills: profile.skills,
+        bio: profile.bio,
+        status: profile.status,
+      })
+      .eq("id", profile.id);
+
+    setSaving(false);
+
+    if (error) {
+      toast({
+        title: "Update Failed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    localStorage.setItem("user", JSON.stringify(profile));
+    toast({ title: "Profile Updated Successfully" });
+  };
+
+  return (
+
+Update your volunteer information 💙
+
+{/* CONTENT */}
+
+{/* PROFILE IMAGE */}
+
+{uploading ? (
+
+{/* FORM FIELDS */}
+
+Availability Status
+
+Available
+
+Busy
+
+Offline
+
+{/* Skills */}
+
+{/* Bio */}
+
+{saving ? (
+
+Saving...
+
+Volunteer with DenaSetu
+
+Join hands with local NGOs and help bring positive change to your
+          community. Whether it’s distributing supplies, organizing events, or
+          supporting digital campaigns — every effort matters.
+
+Field Volunteer
+
+Help NGOs on-ground by collecting, sorting, or distributing
+                donated goods to people in need.
+
+Join as Field Volunteer
+
+Digital Volunteer
+
+Support NGOs remotely by managing campaigns, social media, or
+                technical tasks to boost outreach.
+
+Join as Digital Volunteer
+
+Ready to make a difference?
+
+Sign Up as Volunteer
+
+{
+  const { state } = useLocation();
+  const user = state?.user;
+  const role = state?.role;
+
+  return (
+
+Welcome, {user?.name || "User"} 👋
+
+You are signed in as
+
+{role?.toUpperCase()}
+
+Go to Homepage
