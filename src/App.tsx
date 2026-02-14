@@ -28,6 +28,7 @@ import NearbyNGOsPage from "./pages/NearbyNGOs";
 import CategoryPage from "@/pages/categories/CategoryPage";
 import CategoryCard from "./CategoryCard";
 import JotformChatbot from "@/components/JotformChatbot";
+import ApplyNGO from "./pages/ApplyNGO";
 
 // 💖 Donor Pages
 import DonorDashboard from "./pages/donor/Dashboard";
@@ -90,6 +91,7 @@ import AdminNGOManager from "./pages/admin/ngo/Manage";
 import AdminReports from "./pages/admin/Reports";
 import AllDonations from "./pages/admin/AllDonations";
 import SystemMonitor from "./pages/admin/SystemMonitor";
+import ManageNGOApplications from "./pages/admin/ManageNGOApplications";
 
 const queryClient = new QueryClient();
 
@@ -123,6 +125,8 @@ export default function App() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/categories/:type" element={<CategoryPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/ngo-apply" element={<ApplyNGO />} />
+
 
 
             {/* 💖 DONOR ROUTES */}
@@ -569,6 +573,15 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+  path="/admin/ngo-applications"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <ManageNGOApplications />
+    </ProtectedRoute>
+  }
+/>
+
 
             <Route
               path="/admin/donations"

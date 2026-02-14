@@ -289,6 +289,8 @@ const sidebarItems = [
   { to: "/admin/reports", label: "Reports", icon: FileBarChart },
   { to: "/admin/system", label: "System Monitor", icon: Database },
   { to: "/admin/settings", label: "Settings", icon: Settings },
+  { to: "/admin/ngo-applications", label: "NGO Applications", icon: ShieldCheck },
+
 ];
 
 /* QUICK ACTIONS */

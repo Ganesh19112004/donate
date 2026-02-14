@@ -5,11 +5,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { MapPin, Navigation, Clock, Users, Filter } from "lucide-react";
+import { MapPin, Navigation, Clock, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const toRad = (v) => (v * Math.PI) / 180;
+/* ---------------- DISTANCE CALCULATOR ---------------- */
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const toRad = (v: number) => (v * Math.PI) / 180;
   const R = 6371;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
@@ -25,7 +26,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 const cardAnim = {
   hidden: { opacity: 0, y: 40, scale: 0.95 },
-  show: (i) => ({
+  show: (i: number) => ({
     opacity: 1,
     y: 0,
     scale: 1,
@@ -34,149 +35,182 @@ const cardAnim = {
 };
 
 const NearbyNGOs = () => {
-  const [ngos, setNgos] = useState([]);
-  const [userLocation, setUserLocation] = useState(null);
-
+  const [ngos, setNgos] = useState<any[]>([]);
+  const [userLocation, setUserLocation] = useState<any>(null);
   const [sortMode, setSortMode] = useState("distance");
 
-  // Geolocation
+  /* ---------------- GET USER LOCATION ---------------- */
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setUserLocation({
+        const location = {
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
-        });
+        };
+        setUserLocation(location);
+        loadNGOs(location);
       },
       () => {
         console.warn("Location denied");
+        loadNGOs(null);
       }
     );
   }, []);
 
-  // Load DB
   useEffect(() => {
-    if (userLocation) loadNGOs();
-  }, [userLocation]);
+    loadNGOs(userLocation);
+  }, [sortMode]);
 
-  const loadNGOs = async () => {
+  /* ---------------- LOAD NGOs ---------------- */
+  const loadNGOs = async (location: any) => {
     const { data } = await supabase
       .from("ngos")
       .select(`
         id,
         name,
         city,
-        state,
         description,
         verified,
         rating,
         total_reviews,
         latitude,
-        longitude
-      `);
+        longitude,
+        created_at,
+        updated_at
+      `)
+      .eq("verified", true);
 
-    let list = data || [];
+    if (!data || data.length === 0) {
+      setNgos([]);
+      return;
+    }
 
-    list = list.map((ngo) => {
-      if (ngo.latitude && ngo.longitude && userLocation) {
-        ngo.distance = calculateDistance(
-          userLocation.latitude,
-          userLocation.longitude,
-          ngo.latitude,
-          ngo.longitude
-        );
-      }
-      return ngo;
+    let list = [...data];
+
+    /* -------- DISTANCE -------- */
+    if (location) {
+      list = list.map((ngo: any) => ({
+        ...ngo,
+        distance:
+          ngo.latitude && ngo.longitude
+            ? calculateDistance(
+                location.latitude,
+                location.longitude,
+                ngo.latitude,
+                ngo.longitude
+              )
+            : null,
+      }));
+    }
+
+    /* -------- SMART PRIORITY SORT -------- */
+    list.sort((a: any, b: any) => {
+      // 1️⃣ Highest rating
+      const ratingA = a.rating ?? 0;
+      const ratingB = b.rating ?? 0;
+      if (ratingA !== ratingB) return ratingB - ratingA;
+
+      // 2️⃣ Profile completeness score
+      const score = (ngo: any) => {
+        let s = 0;
+        if (ngo.city) s++;
+        if (ngo.description) s++;
+        if (ngo.latitude && ngo.longitude) s++;
+        if (ngo.total_reviews > 0) s++;
+        return s;
+      };
+
+      const scoreA = score(a);
+      const scoreB = score(b);
+      if (scoreA !== scoreB) return scoreB - scoreA;
+
+      // 3️⃣ Joined first (older first)
+      return (
+        new Date(a.created_at).getTime() -
+        new Date(b.created_at).getTime()
+      );
     });
 
-    if (sortMode === "distance")
-      list.sort((a, b) => (a.distance ?? 99) - (b.distance ?? 99));
-    if (sortMode === "rating")
-      list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-    if (sortMode === "reviews")
-      list.sort((a, b) => (b.total_reviews ?? 0) - (a.total_reviews ?? 0));
+    /* -------- SORT MODE OVERRIDE -------- */
+    if (sortMode === "distance" && location) {
+      list.sort((a: any, b: any) => (a.distance ?? 9999) - (b.distance ?? 9999));
+    }
 
-    setNgos(list.slice(0, 4));
+    if (sortMode === "rating") {
+      list.sort((a: any, b: any) => (b.rating ?? 0) - (a.rating ?? 0));
+    }
+
+    if (sortMode === "reviews") {
+      list.sort(
+        (a: any, b: any) => (b.total_reviews ?? 0) - (a.total_reviews ?? 0)
+      );
+    }
+
+    setNgos(list.slice(0, 3)); // Only top 3
   };
 
-  const openDirections = (ngo) => {
+  const openDirections = (ngo: any) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${ngo.latitude},${ngo.longitude}`;
     window.open(url, "_blank");
   };
 
   return (
-    <section className="py-24 bg-gradient-to-b from-white to-blue-50 relative">
+    <section className="py-24 bg-gradient-to-b from-white to-blue-50">
       <div className="container mx-auto px-4">
 
-        {/* HEADER */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
-        >
+        <div className="text-center mb-16">
           <h2 className="text-4xl font-extrabold mb-4">
-            🌍 NGOs Near You
+            🌍 Trusted NGOs Near You
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            We detect your location & sort NGOs automatically by nearest.
+            Showing verified NGOs ranked by quality & profile strength.
           </p>
-        </motion.div>
+        </div>
 
-        {/* FILTER BAR */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          className="flex items-center justify-center gap-4 mb-10"
-        >
+        {/* FILTER */}
+        <div className="flex justify-center gap-4 mb-10">
           <Button
             variant={sortMode === "distance" ? "default" : "outline"}
             onClick={() => setSortMode("distance")}
           >
             Nearest
           </Button>
+
           <Button
             variant={sortMode === "rating" ? "default" : "outline"}
             onClick={() => setSortMode("rating")}
           >
             Top Rated
           </Button>
+
           <Button
             variant={sortMode === "reviews" ? "default" : "outline"}
             onClick={() => setSortMode("reviews")}
           >
             Most Reviewed
           </Button>
-        </motion.div>
+        </div>
 
         {/* LIST */}
         <div className="max-w-4xl mx-auto space-y-6">
-
           <AnimatePresence>
             {ngos.map((ngo, i) => (
               <motion.div
                 key={ngo.id}
                 custom={i}
                 initial="hidden"
-                whileInView="show"
+                animate="show"
                 variants={cardAnim}
-                viewport={{ once: true }}
-                whileHover={{
-                  y: -6,
-                  boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
-                }}
               >
                 <Card className="rounded-2xl overflow-hidden border">
-                  <CardContent className="p-6 flex items-center justify-between">
+                  <CardContent className="p-6 flex justify-between">
 
-                    {/* LEFT */}
                     <div className="flex-1">
                       <h3 className="font-bold text-xl flex gap-2 items-center">
                         {ngo.name}
-                        {ngo.verified && (
-                          <span className="text-green-600 text-sm font-medium">
-                            ✔ Verified
-                          </span>
-                        )}
+                        <span className="text-green-600 text-sm">
+                          ✔ Verified
+                        </span>
                       </h3>
 
                       <div className="text-gray-600 flex items-center gap-1 text-sm">
@@ -187,77 +221,56 @@ const NearbyNGOs = () => {
                         {ngo.description}
                       </p>
 
-                      {/* Stats */}
                       <div className="flex gap-6 text-sm mt-3 text-gray-700">
                         <div className="flex items-center">
                           <Users className="h-4 w-4 mr-1" />
-                          {ngo.total_reviews} reviews
+                          {ngo.total_reviews ?? 0} reviews
                         </div>
-                        {ngo.rating && (
-                          <div className="flex items-center">
-                            ⭐ {ngo.rating}/5
-                          </div>
-                        )}
+                        <div>⭐ {ngo.rating ?? 0}/5</div>
                         <div className="flex items-center">
                           <Clock className="h-4 w-4 mr-1" />
-                          Updated recently
+                          Joined {new Date(ngo.created_at).toLocaleDateString()}
                         </div>
                       </div>
 
-                      {/* Distance */}
                       {ngo.distance && (
-                        <motion.p
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="mt-3 text-green-700 font-medium flex items-center gap-1"
-                        >
+                        <p className="mt-3 text-green-700 font-medium">
                           📍 {ngo.distance.toFixed(2)} km away
-                          <motion.span
-                            animate={{ scale: [1, 1.3, 1] }}
-                            transition={{ repeat: Infinity, duration: 1.8 }}
-                          >
-                            🔔
-                          </motion.span>
-                        </motion.p>
+                        </p>
                       )}
                     </div>
 
-                    {/* RIGHT BUTTONS */}
                     <div className="ml-4 flex flex-col gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
+                      <button
                         className="flex items-center gap-2 px-4 py-2 border rounded-lg"
                         onClick={() => openDirections(ngo)}
                       >
                         <Navigation className="h-4 w-4" /> Directions
-                      </motion.button>
+                      </button>
 
                       <Link to={`/ngo/${ngo.id}`}>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          className="px-4 py-2 rounded-lg bg-primary text-white"
-                        >
+                        <button className="px-4 py-2 rounded-lg bg-primary text-white">
                           View Details
-                        </motion.button>
+                        </button>
                       </Link>
                     </div>
+
                   </CardContent>
                 </Card>
               </motion.div>
             ))}
           </AnimatePresence>
-
         </div>
 
-        {/* View All */}
         <div className="text-center mt-12">
           <Link to="/nearby-ngos">
-            <Button size="lg" variant="outline" className="hover:bg-primary/10">
+            <Button size="lg" variant="outline">
               <MapPin className="mr-2 h-5 w-5" />
-              View All Nearby NGOs
+              View All NGOs
             </Button>
           </Link>
         </div>
+
       </div>
     </section>
   );

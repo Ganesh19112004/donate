@@ -1032,3 +1032,25 @@ create table public.volunteer_location_logs (
 alter table volunteer_assignments
 add column delivered_latitude double precision,
 add column delivered_longitude double precision;
+
+
+create table ngo_applications (
+  id uuid default uuid_generate_v4() primary key,
+  ngo_name text,
+  email text,
+  password text,
+  registration_number text,
+  pan_number text,
+  aadhar_number text,
+  photo_url text,
+  status text default 'pending', -- pending | approved | rejected
+  created_at timestamp default now()
+);
+
+create table verified_ngos (
+  registration_number text primary key,
+  ngo_name text,
+  state text,
+  city text,
+  created_at timestamp default now()
+);
