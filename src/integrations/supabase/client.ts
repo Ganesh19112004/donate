@@ -1,4 +1,3 @@
-// src/integrations/supabase/client.ts
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
@@ -11,14 +10,9 @@ export const supabase = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      persistSession: true,        // ✅ MUST BE TRUE
-      autoRefreshToken: true,      // ✅ MUST BE TRUE
-      detectSessionInUrl: true,    // ✅ CRITICAL FOR GOOGLE OAUTH
-    },
-    global: {
-      headers: {
-        "x-application-name": "DenaSetu",
-      },
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true, // 🔥 REQUIRED
     },
   }
 );
