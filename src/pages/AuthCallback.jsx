@@ -7,18 +7,28 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const run = async () => {
-      const { data } = await supabase.auth.getUser();
-      const user = data?.user;
+      // 🔥 VERY IMPORTANT: wait for session
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
 
-      if (!user) return navigate("/auth");
+      if (!session) {
+        return navigate("/auth");
+      }
+
+      const user = session.user;
 
       const role = localStorage.getItem("oauth_role");
-      if (!role) return navigate("/auth");
+      if (!role) {
+        return navigate("/auth");
+      }
 
       const table = role === "donor" ? "donors" : "volunteers";
 
-      const email = user.email.toLowerCase();
-      const name = user.user_metadata.full_name || "User";
+      const email = user.email?.toLowerCase();
+      const name =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        "User";
 
       // 1️⃣ Check by auth_id
       const { data: byAuthId } = await supabase
@@ -43,7 +53,7 @@ const AuthCallback = () => {
       let profile;
 
       if (byEmail) {
-        // 3️⃣ LINK GOOGLE ACCOUNT
+        // Link Google account
         const { data, error } = await supabase
           .from(table)
           .update({
@@ -54,10 +64,14 @@ const AuthCallback = () => {
           .select()
           .single();
 
-        if (error) return alert(error.message);
+        if (error) {
+          alert(error.message);
+          return navigate("/auth");
+        }
+
         profile = data;
       } else {
-        // 4️⃣ NEW GOOGLE USER
+        // New Google user
         const { data, error } = await supabase
           .from(table)
           .insert({
@@ -70,19 +84,24 @@ const AuthCallback = () => {
           .select()
           .single();
 
-        if (error) return alert(error.message);
+        if (error) {
+          alert(error.message);
+          return navigate("/auth");
+        }
+
         profile = data;
       }
 
       localStorage.setItem("user", JSON.stringify(profile));
       localStorage.setItem("role", role);
+
       navigate(`/${role}/dashboard`);
     };
 
     run();
   }, [navigate]);
 
-  return <p className="text-center mt-20">Signing you in…</p>;
+  return <p className="text-center mt-20">Signing you in...</p>;
 };
 
 export default AuthCallback;

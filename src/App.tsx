@@ -29,7 +29,7 @@ import CategoryPage from "@/pages/categories/CategoryPage";
 import CategoryCard from "./CategoryCard";
 import JotformChatbot from "@/components/JotformChatbot";
 import ApplyNGO from "./pages/ApplyNGO";
-
+import AuthCallback from "./pages/AuthCallback";
 // 💖 Donor Pages
 import DonorDashboard from "./pages/donor/Dashboard";
 import CreateDonation from "./pages/donor/CreateDonation";
@@ -66,7 +66,7 @@ import NGONeeds from "./pages/ngo/Needs";
 import CampaignHistory from "./pages/ngo/CampaignHistory";
 import CampaignEdit from "./pages/ngo/CampaignEdit";
 import CampaignDonors from "./pages/ngo/CampaignDonors";
-import AuthCallback from "./pages/AuthCallback";  
+
 // 🟢 NEW PAGE — NGO MONEY RECEIVED PAGE
 import MoneyReceived from "./pages/ngo/MoneyReceived";
 

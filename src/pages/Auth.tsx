@@ -93,29 +93,25 @@ const Auth = () => {
   /* ===========================
      GOOGLE SIGN IN
      =========================== */
-  const handleGoogleLogin = async () => {
-    if (role !== "donor" && role !== "volunteer") {
-      alert("Google login allowed only for Donor & Volunteer");
-      return;
-    }
+const handleGoogleLogin = async () => {
+  if (role !== "donor" && role !== "volunteer") {
+    alert("Google login allowed only for Donor & Volunteer");
+    return;
+  }
 
-    setLoading(true);
+  localStorage.setItem("oauth_role", role);
 
-    localStorage.setItem("oauth_role", role);
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin + "/auth/callback",
-      },
-    });
-
-    if (error) {
-      alert(error.message);
-      setLoading(false);
-    }
-  };
-
+  if (error) {
+    alert(error.message);
+  }
+};
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6">
 
