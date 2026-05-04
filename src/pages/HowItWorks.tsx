@@ -17,7 +17,7 @@ export default function HowItWorks() {
       {/* HEADER */}
       <div className="text-center max-w-3xl mx-auto mb-16">
         <h1 className="text-5xl font-extrabold tracking-tight mb-4">
-          How <span className="text-primary">dansetu</span> Works
+          How <span className="text-primary">DanSetu</span> Works
         </h1>
         <p className="text-lg text-gray-600 leading-relaxed">
           A simple and transparent platform that connects donors, volunteers, and NGOs 
@@ -76,13 +76,13 @@ export default function HowItWorks() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300">
           <img
             src="https://images.unsplash.com/photo-1526256262350-7da7584cf5eb"
-            alt="dansetu community"
+            alt="DanSetu community"
             className="w-full h-[320px] object-cover"
           />
           <div className="p-7">
             <h2 className="text-3xl font-bold mb-3">A Community Built on Trust</h2>
             <p className="text-gray-600 leading-relaxed text-[15px]">
-              dansetu empowers giving by making it simple and meaningful.
+              DanSetu empowers giving by making it simple and meaningful.
               Our system ensures transparency at every step — connecting people who wish to help with NGOs that truly need support.
             </p>
           </div>
@@ -96,7 +96,7 @@ export default function HowItWorks() {
         <div className="space-y-5">
           {[
             {
-              q: "Is dansetu free?",
+              q: "Is DanSetu free?",
               a: "Yes! Donors and volunteers can use the platform completely free of cost.",
             },
             {

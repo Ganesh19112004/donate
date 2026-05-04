@@ -57,7 +57,7 @@ const Header = () => {
           whileHover={{ scale: 1.05 }}
           className="text-2xl font-extrabold text-blue-700 cursor-pointer"
         >
-          <Link to="/">dansetu</Link>
+          <Link to="/">DanSetu</Link>
         </motion.div>
 
         {/* DESKTOP NAV */}

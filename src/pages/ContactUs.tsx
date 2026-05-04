@@ -8,7 +8,7 @@ export default function ContactUs() {
 
         {/* Heading */}
         <h1 className="text-4xl font-extrabold mb-6 text-center">
-          Contact <span className="text-primary">dansetu</span>
+          Contact <span className="text-primary">DanSetu</span>
         </h1>
 
         <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-12">
@@ -50,7 +50,7 @@ export default function ContactUs() {
                 <div>
                   <p className="font-semibold">Office Address</p>
                   <p className="text-muted-foreground">
-                    dansetu HQ, Mumbai, Maharashtra, India
+                    DanSetu HQ, Mumbai, Maharashtra, India
                   </p>
                 </div>
               </div>

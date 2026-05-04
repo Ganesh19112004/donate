@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">dansetu</string>
-    <string name="title_activity_main">dansetu</string>
-    <string name="package_name">com.dansetu.app</string>
-    <string name="custom_url_scheme">com.dansetu.app</string>
+    <string name="app_name">DanSetu</string>
+    <string name="title_activity_main">DanSetu</string>
+    <string name="package_name">com.DanSetu.app</string>
+    <string name="custom_url_scheme">com.DanSetu.app</string>
 </resources>
