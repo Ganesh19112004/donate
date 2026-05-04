@@ -10,16 +10,16 @@ export default function TermsOfService() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
             <p>
-              Welcome to <strong>DenaSetu</strong>. By using our platform, you agree to follow these terms. Our goal is to maintain a transparent and trustworthy donation ecosystem.
+              Welcome to <strong>dansetu</strong>. By using our platform, you agree to follow these terms. Our goal is to maintain a transparent and trustworthy donation ecosystem.
             </p>
             <p>
               Donors and NGOs are responsible for providing accurate information. Misuse, fraud, or policy violation may result in account suspension.
             </p>
             <p>
-              DenaSetu reserves the right to modify, suspend, or terminate any part of the service at any time, with or without notice.
+              dansetu reserves the right to modify, suspend, or terminate any part of the service at any time, with or without notice.
             </p>
             <p>
-              For disputes or inquiries, please contact us at <strong>support@denasetu.org</strong>.
+              For disputes or inquiries, please contact us at <strong>support@dansetu.org</strong>.
             </p>
           </CardContent>
         </Card>

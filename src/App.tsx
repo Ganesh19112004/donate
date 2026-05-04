@@ -97,7 +97,7 @@ const queryClient = new QueryClient();
 
 export default function App() {
   useEffect(() => {
-    console.log("✅ DenaSetu App Initialized");
+    console.log("✅ dansetu App Initialized");
   }, []);
 
   return (

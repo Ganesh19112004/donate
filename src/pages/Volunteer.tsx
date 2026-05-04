@@ -7,7 +7,7 @@ export default function Volunteer() {
     <div className="min-h-screen bg-background py-12 px-4">
       <div className="container mx-auto max-w-4xl">
         <h1 className="text-4xl font-bold mb-8 text-center">
-          Volunteer with DenaSetu
+          Volunteer with dansetu
         </h1>
 
         <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">

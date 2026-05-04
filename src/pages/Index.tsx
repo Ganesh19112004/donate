@@ -109,7 +109,7 @@ const Index = () => {
 
             {/* Brand Info */}
             <div className="space-y-4">
-              <h3 className="font-bold text-lg">DenaSetu</h3>
+              <h3 className="font-bold text-lg">dansetu</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Connecting communities with local NGOs to create meaningful impact through donations.
               </p>
@@ -155,7 +155,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
           >
-            <p>&copy; {new Date().getFullYear()} DenaSetu. Making local impact through community donations.</p>
+            <p>&copy; {new Date().getFullYear()} dansetu. Making local impact through community donations.</p>
           </motion.div>
         </div>
       </footer>

@@ -117,7 +117,7 @@ const handleGoogleLogin = async () => {
 
       {/* Header */}
       <div className="w-full max-w-md mb-6 flex justify-between items-center">
-        <h1 className="text-3xl font-extrabold text-blue-700">DenaSetu</h1>
+        <h1 className="text-3xl font-extrabold text-blue-700">dansetu</h1>
         <Link to="/" className="flex items-center gap-2 text-blue-600">
           <Home className="w-5 h-5" /> Home
         </Link>

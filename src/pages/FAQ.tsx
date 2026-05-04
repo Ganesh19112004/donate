@@ -15,12 +15,12 @@ export default function FAQ() {
 
   const faqs = [
     {
-      q: "How does DenaSetu work?",
-      a: "DenaSetu connects donors, NGOs, and volunteers through a verified digital platform. Donors post items, NGOs accept donations, and volunteers assist with pickup and delivery.",
+      q: "How does dansetu work?",
+      a: "dansetu connects donors, NGOs, and volunteers through a verified digital platform. Donors post items, NGOs accept donations, and volunteers assist with pickup and delivery.",
     },
     {
-      q: "Is DenaSetu free to use?",
-      a: "Yes! DenaSetu is 100% free for donors and volunteers. NGOs complete a simple verification process before activation.",
+      q: "Is dansetu free to use?",
+      a: "Yes! dansetu is 100% free for donors and volunteers. NGOs complete a simple verification process before activation.",
     },
     {
       q: "Can I donate money or only items?",
@@ -43,7 +43,7 @@ export default function FAQ() {
       a: "Yes, registered NGOs can create campaigns, upload gallery images, request volunteers, and manage donations.",
     },
     {
-      q: "How does DenaSetu ensure safety?",
+      q: "How does dansetu ensure safety?",
       a: "Each donor, volunteer, and NGO goes through an account verification process. All actions are tracked in the system.",
     },
   ];
@@ -62,7 +62,7 @@ export default function FAQ() {
             Frequently Asked <span className="text-primary">Questions</span>
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Find answers to common questions about donations, NGOs, volunteers, and the DenaSetu platform.
+            Find answers to common questions about donations, NGOs, volunteers, and the dansetu platform.
           </p>
         </div>
 

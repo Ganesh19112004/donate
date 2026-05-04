@@ -1,5 +1,5 @@
 {
-    console.log("✅ DenaSetu App Initialized");
+    console.log("✅ dansetu App Initialized");
   }, []);
 
   return (
@@ -78,7 +78,7 @@ Urgency
 
 {/* 🔷 Header */}
 
-DenaSetu Assistant
+dansetu Assistant
 
 Online • AI Support
 
@@ -86,7 +86,7 @@ Online • AI Support
 
 {/* 🔻 Footer */}
 
-Powered by DenaSetu AI • Do not share OTP or payment details
+Powered by dansetu AI • Do not share OTP or payment details
 
 {
     const { data } = await supabase
@@ -166,7 +166,7 @@ Explore India's top-rated, verified NGOs making real impact.
 
 {/* LOGO */}
 
-DenaSetu
+dansetu
 
 {/* DESKTOP NAV */}
 
@@ -3855,13 +3855,13 @@ Welcome to
 
 Our mission is to make donations more personal, more visible, and
           more effective. Whether you’re an NGO looking for support, a donor
-          seeking trustworthy causes, or a volunteer ready to help, DenaSetu
+          seeking trustworthy causes, or a volunteer ready to help, dansetu
           brings everyone together in one trusted space.
 
 Together, we aim to empower communities and make generosity
           effortless.
 
-Made with ❤️ by the DenaSetu team.
+Made with ❤️ by the dansetu team.
 
 {
     e.preventDefault();
@@ -3895,7 +3895,7 @@ Terms & Conditions
 
 1. General Information
 
-DenaSetu is a platform that connects donors, NGOs, and volunteers to
+dansetu is a platform that connects donors, NGOs, and volunteers to
           promote charitable and community-driven activities. We do not directly
           handle or guarantee transactions between users and organizations.
 
@@ -3908,7 +3908,7 @@ Users must provide accurate information when registering and using our
 3. Donations and Refund Policy
 
 Donations made through this platform are voluntary and non-refundable.
-          DenaSetu is not responsible for the use or management of donated
+          dansetu is not responsible for the use or management of donated
           funds by NGOs.
 
 4. Privacy and Data
@@ -3945,7 +3945,7 @@ ganesh.17478@sakec.ac.in
 
 Office Address
 
-DenaSetu HQ, Mumbai, Maharashtra, India
+dansetu HQ, Mumbai, Maharashtra, India
 
 {/* Map */}
 
@@ -5183,7 +5183,7 @@ Frequently Asked
 
 Questions
 
-Find answers to common questions about donations, NGOs, volunteers, and the DenaSetu platform.
+Find answers to common questions about donations, NGOs, volunteers, and the dansetu platform.
 
 {/* FAQ List */}
 
@@ -5244,7 +5244,7 @@ A simple and transparent platform that connects donors, volunteers, and NGOs
 
 A Community Built on Trust
 
-DenaSetu empowers giving by making it simple and meaningful.
+dansetu empowers giving by making it simple and meaningful.
               Our system ensures transparency at every step — connecting people who wish to help with NGOs that truly need support.
 
 {/* FAQ SECTION */}
@@ -5366,7 +5366,7 @@ Terms of Service
 
 {/* Bottom */}
 
-&copy; {new Date().getFullYear()} DenaSetu. Making local impact through community donations.
+&copy; {new Date().getFullYear()} dansetu. Making local impact through community donations.
 
 ({
       opacity: 1,
@@ -6536,7 +6536,7 @@ Send Request
 
 Register Your NGO
 
-Join DenaSetu to connect with donors and volunteers who care about your cause.
+Join dansetu to connect with donors and volunteers who care about your cause.
 
 Eligibility
 
@@ -6568,7 +6568,7 @@ You can request data deletion or account removal anytime by contacting our suppo
 
 For questions about data protection, please reach us at
 
-support@denasetu.org
+support@dansetu.org
 
 {
     const { data } = await supabase
@@ -6679,7 +6679,7 @@ Recent Reviews
 
 Donors and NGOs are responsible for providing accurate information. Misuse, fraud, or policy violation may result in account suspension.
 
-DenaSetu reserves the right to modify, suspend, or terminate any part of the service at any time, with or without notice.
+dansetu reserves the right to modify, suspend, or terminate any part of the service at any time, with or without notice.
 
 For disputes or inquiries, please contact us at
 
@@ -7327,7 +7327,7 @@ Offline
 
 Saving...
 
-Volunteer with DenaSetu
+Volunteer with dansetu
 
 Join hands with local NGOs and help bring positive change to your
           community. Whether it’s distributing supplies, organizing events, or

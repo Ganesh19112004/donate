@@ -7,7 +7,7 @@ const Terms = () => {
         </h1>
 
         <p className="text-gray-700 leading-relaxed mb-4">
-          Welcome to <strong>DenaSetu</strong>. By using our website and
+          Welcome to <strong>dansetu</strong>. By using our website and
           services, you agree to the following terms and conditions. Please read
           them carefully.
         </p>
@@ -16,7 +16,7 @@ const Terms = () => {
           1. General Information
         </h2>
         <p className="text-gray-700 mb-4">
-          DenaSetu is a platform that connects donors, NGOs, and volunteers to
+          dansetu is a platform that connects donors, NGOs, and volunteers to
           promote charitable and community-driven activities. We do not directly
           handle or guarantee transactions between users and organizations.
         </p>
@@ -35,7 +35,7 @@ const Terms = () => {
         </h2>
         <p className="text-gray-700 mb-4">
           Donations made through this platform are voluntary and non-refundable.
-          DenaSetu is not responsible for the use or management of donated
+          dansetu is not responsible for the use or management of donated
           funds by NGOs.
         </p>
 

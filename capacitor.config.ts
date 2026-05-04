@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.denasetu.app',
-  appName: 'denasetu',
+  appId: 'com.dansetu.app',
+  appName: 'dansetu',
   webDir: 'dist'
 };
 

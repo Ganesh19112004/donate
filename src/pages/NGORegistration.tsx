@@ -8,7 +8,7 @@ export default function NGORegistration() {
       <div className="container mx-auto max-w-3xl">
         <h1 className="text-4xl font-bold mb-6 text-center">Register Your NGO</h1>
         <p className="text-muted-foreground text-center mb-8">
-          Join DenaSetu to connect with donors and volunteers who care about your cause.
+          Join dansetu to connect with donors and volunteers who care about your cause.
         </p>
 
         <Card className="p-6">

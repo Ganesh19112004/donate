@@ -1,4 +1,4 @@
-package com.denasetu.app;
+package com.dansetu.app;
 
 import com.getcapacitor.BridgeActivity;
 

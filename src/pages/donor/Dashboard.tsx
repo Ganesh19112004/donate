@@ -84,7 +84,7 @@ const DonorDashboard = () => {
       <aside className="w-64 bg-white border-r border-gray-200 p-6 hidden md:flex flex-col justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-blue-700 mb-8">
-            DenaSetu
+            dansetu
           </h1>
 
           <nav className="space-y-3">

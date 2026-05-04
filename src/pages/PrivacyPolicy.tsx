@@ -10,7 +10,7 @@ export default function PrivacyPolicy() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
             <p>
-              At <strong>DenaSetu</strong>, your privacy is our top priority. We collect only the necessary information to facilitate donations, verify NGOs, and enhance your experience.
+              At <strong>dansetu</strong>, your privacy is our top priority. We collect only the necessary information to facilitate donations, verify NGOs, and enhance your experience.
             </p>
             <p>
               We do not share or sell your data to third parties. Your information is securely stored and used strictly for verified NGO partnerships and transparency purposes.
@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
               You can request data deletion or account removal anytime by contacting our support team.
             </p>
             <p>
-              For questions about data protection, please reach us at <strong>support@denasetu.org</strong>.
+              For questions about data protection, please reach us at <strong>support@dansetu.org</strong>.
             </p>
           </CardContent>
         </Card>
