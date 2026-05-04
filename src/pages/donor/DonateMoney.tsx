@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Star, Heart, CheckCircle, Search } from "lucide-react";
 
-const RAZORPAY_KEY_ID = "rzp_test_RmaCFr0K8J6NKZ";
+const RAZORPAY_KEY_ID = "rzp_test_SlNseXTPU2ceUA";
 
 export default function DonateMoney() {
   const [ngos, setNgos] = useState<any[]>([]);

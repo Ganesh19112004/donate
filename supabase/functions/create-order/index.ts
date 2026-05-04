@@ -5,8 +5,8 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
 
-    const keyId = Deno.env.get("rzp_test_RmaCFr0K8J6NKZ")!;
-    const keySecret = Deno.env.get("2omV9A7oJQUhmVk4aZELsEnP")!;
+    const keyId = Deno.env.get("rzp_test_SlNseXTPU2ceUA")!;
+    const keySecret = Deno.env.get("O85eOgGPm1XEzE5g5kj7tP5T")!;
 
     const credentials = btoa(`${keyId}:${keySecret}`);
 

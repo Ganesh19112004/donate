@@ -6,102 +6,83 @@ const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const run = async () => {
-      // 🔥 VERY IMPORTANT: wait for session
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData?.session;
+    const handleOAuth = async () => {
+      const { data, error } = await supabase.auth.getSession();
 
-      if (!session) {
+      if (error || !data.session) {
         return navigate("/auth");
       }
 
-      const user = session.user;
-
-      const role = localStorage.getItem("oauth_role");
-      if (!role) {
-        return navigate("/auth");
-      }
-
-      const table = role === "donor" ? "donors" : "volunteers";
-
-      const email = user.email?.toLowerCase();
+      const user = data.session.user;
+      const email = user.email?.toLowerCase() || "";
       const name =
         user.user_metadata?.full_name ||
         user.user_metadata?.name ||
         "User";
 
-      // 1️⃣ Check by auth_id
-      const { data: byAuthId } = await supabase
-        .from(table)
-        .select("*")
-        .eq("auth_id", user.id)
-        .maybeSingle();
+      // 🔥 Decide role automatically
+      // If email exists in donors -> donor
+      // If exists in volunteers -> volunteer
+      // Otherwise create donor by default
 
-      if (byAuthId) {
-        localStorage.setItem("user", JSON.stringify(byAuthId));
-        localStorage.setItem("role", role);
-        return navigate(`/${role}/dashboard`);
-      }
-
-      // 2️⃣ Check by email
-      const { data: byEmail } = await supabase
-        .from(table)
+      // 1️⃣ Check donor
+      const { data: donor } = await supabase
+        .from("donors")
         .select("*")
         .eq("email", email)
         .maybeSingle();
 
-      let profile;
-
-      if (byEmail) {
-        // Link Google account
-        const { data, error } = await supabase
-          .from(table)
-          .update({
-            auth_id: user.id,
-            provider: "google",
-          })
-          .eq("email", email)
-          .select()
-          .single();
-
-        if (error) {
-          alert(error.message);
-          return navigate("/auth");
-        }
-
-        profile = data;
-      } else {
-        // New Google user
-        const { data, error } = await supabase
-          .from(table)
-          .insert({
-            auth_id: user.id,
-            name,
-            email,
-            provider: "google",
-            created_at: new Date(),
-          })
-          .select()
-          .single();
-
-        if (error) {
-          alert(error.message);
-          return navigate("/auth");
-        }
-
-        profile = data;
+      if (donor) {
+        localStorage.setItem("user", JSON.stringify(donor));
+        localStorage.setItem("role", "donor");
+        return navigate("/donor/dashboard");
       }
 
-      localStorage.setItem("user", JSON.stringify(profile));
-      localStorage.setItem("role", role);
+      // 2️⃣ Check volunteer
+      const { data: volunteer } = await supabase
+        .from("volunteers")
+        .select("*")
+        .eq("email", email)
+        .maybeSingle();
 
-      navigate(`/${role}/dashboard`);
+      if (volunteer) {
+        localStorage.setItem("user", JSON.stringify(volunteer));
+        localStorage.setItem("role", "volunteer");
+        return navigate("/volunteer/dashboard");
+      }
+
+      // 3️⃣ If not exists → create donor by default
+      const { data: newDonor, error: insertError } = await supabase
+        .from("donors")
+        .insert({
+          name,
+          email,
+          auth_id: user.id,
+          provider: "google",
+          created_at: new Date(),
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error(insertError);
+        return navigate("/auth");
+      }
+
+      localStorage.setItem("user", JSON.stringify(newDonor));
+      localStorage.setItem("role", "donor");
+
+      navigate("/donor/dashboard");
     };
 
-    run();
+    handleOAuth();
   }, [navigate]);
 
-  return <p className="text-center mt-20">Signing you in...</p>;
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <p className="text-lg font-semibold">Signing you in...</p>
+    </div>
+  );
 };
 
 export default AuthCallback;
