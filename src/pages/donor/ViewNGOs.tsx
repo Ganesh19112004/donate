@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Star, Globe, CheckCircle, Image as ImgIcon } from "lucide-react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
@@ -297,12 +297,30 @@ const ViewNGOs = () => {
                     )}
                   </div>
 
-                  <Link
-                    to={`/donor/ngo/${ngo.id}`}
-                    className="block mt-4 text-center bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
-                  >
-                    View Full Profile →
-                  </Link>
+                  <div className="grid grid-cols-2 gap-3 mt-5">
+
+  {/* VIEW PROFILE */}
+
+  <Link
+    to={`/donor/ngo/${ngo.id}`}
+    className="text-center bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 font-semibold transition"
+  >
+    View Profile
+  </Link>
+
+  {/* MESSAGE NGO */}
+
+  <button
+    onClick={() =>
+      navigate(
+        `/donor/messages?ngo=${ngo.id}`
+      )
+    }
+    className="bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 font-semibold transition"
+  >
+    Message NGO
+  </button>
+</div>
                 </div>
               );
             })}

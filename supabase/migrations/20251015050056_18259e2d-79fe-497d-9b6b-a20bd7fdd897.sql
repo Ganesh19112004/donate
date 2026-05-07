@@ -1054,3 +1054,297 @@ create table verified_ngos (
   city text,
   created_at timestamp default now()
 );
+
+
+CREATE TABLE IF NOT EXISTS ngo_bank_details (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  ngo_id UUID REFERENCES ngos(id) ON DELETE CASCADE,
+
+  account_holder_name TEXT NOT NULL,
+
+  bank_name TEXT NOT NULL,
+
+  account_number TEXT NOT NULL,
+
+  ifsc_code TEXT NOT NULL,
+
+  branch_name TEXT,
+
+  upi_id TEXT,
+
+  phone_number TEXT,
+
+  pan_number TEXT,
+
+  is_verified BOOLEAN DEFAULT FALSE,
+
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  updated_at TIMESTAMP DEFAULT NOW(),
+
+  UNIQUE(ngo_id)
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+DROP TABLE IF EXISTS typing_status CASCADE;
+DROP TABLE IF EXISTS user_presence CASCADE;
+
+-- ===============================
+-- MAIN CHAT TABLE
+-- ===============================
+
+DROP TABLE IF EXISTS messages CASCADE;
+
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  sender_id UUID NOT NULL,
+  sender_role TEXT NOT NULL CHECK (
+    sender_role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  receiver_id UUID NOT NULL,
+  receiver_role TEXT NOT NULL CHECK (
+    receiver_role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  message TEXT,
+
+  media_url TEXT,
+
+  message_type TEXT DEFAULT 'text'
+  CHECK (
+    message_type IN (
+      'text',
+      'image',
+      'audio',
+      'file',
+      'emoji',
+      'system'
+    )
+  ),
+
+  read_status BOOLEAN DEFAULT FALSE,
+
+  edited BOOLEAN DEFAULT FALSE,
+
+  deleted BOOLEAN DEFAULT FALSE,
+
+  reaction TEXT,
+
+  reply_to UUID REFERENCES messages(id)
+  ON DELETE SET NULL,
+
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ===============================
+-- ONLINE STATUS
+-- ===============================
+
+CREATE TABLE user_presence (
+  user_id UUID PRIMARY KEY,
+
+  role TEXT NOT NULL CHECK (
+    role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  online BOOLEAN DEFAULT FALSE,
+
+  last_seen TIMESTAMP DEFAULT NOW()
+);
+
+-- ===============================
+-- TYPING STATUS
+-- ===============================
+
+CREATE TABLE typing_status (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  sender_id UUID NOT NULL,
+
+  receiver_id UUID NOT NULL,
+
+  typing BOOLEAN DEFAULT FALSE,
+
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ===============================
+-- INDEXES
+-- ===============================
+
+CREATE INDEX idx_messages_sender
+ON messages(sender_id);
+
+CREATE INDEX idx_messages_receiver
+ON messages(receiver_id);
+
+CREATE INDEX idx_messages_pair
+ON messages(sender_id, receiver_id);
+
+CREATE INDEX idx_messages_created
+ON messages(created_at);
+
+-- ===============================
+-- REALTIME
+-- ===============================
+
+ALTER PUBLICATION supabase_realtime
+ADD TABLE messages;
+
+ALTER PUBLICATION supabase_realtime
+ADD TABLE typing_status;
+
+ALTER PUBLICATION supabase_realtime
+ADD TABLE user_presence;
+
+
+CREATE TABLE IF NOT EXISTS typing_status (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  sender_id UUID NOT NULL,
+
+  receiver_id UUID NOT NULL,
+
+  typing BOOLEAN DEFAULT FALSE,
+
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_presence (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  user_id UUID NOT NULL,
+
+  role TEXT,
+
+  online BOOLEAN DEFAULT FALSE,
+
+  last_seen TIMESTAMP DEFAULT NOW(),
+
+  UNIQUE(user_id)
+);
+
+
+
+-- =====================================================
+-- CONVERSATIONS
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- =====================================================
+-- CONVERSATION PARTICIPANTS
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS conversation_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
+
+  user_id UUID NOT NULL,
+
+  role TEXT NOT NULL CHECK (
+    role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  joined_at TIMESTAMP DEFAULT NOW()
+);
+
+-- =====================================================
+-- NEW MESSAGES TABLE
+-- =====================================================
+
+DROP TABLE IF EXISTS messages CASCADE;
+
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
+
+  sender_id UUID NOT NULL,
+
+  sender_role TEXT NOT NULL CHECK (
+    sender_role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  message TEXT DEFAULT '',
+
+  message_type TEXT DEFAULT 'text',
+
+  media_url TEXT DEFAULT '',
+
+  read_status BOOLEAN DEFAULT FALSE,
+
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_messages_conversation
+ON messages(conversation_id);
+
+CREATE INDEX idx_messages_created
+ON messages(created_at);
+
+
+
+
+-- =====================================================
+-- CONVERSATIONS
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- =====================================================
+-- PARTICIPANTS
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS conversation_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
+
+  user_id UUID NOT NULL,
+
+  role TEXT NOT NULL CHECK (
+    role IN ('donor', 'ngo', 'volunteer')
+  ),
+
+  joined_at TIMESTAMP DEFAULT NOW()
+);
+
+-- =====================================================
+-- UPDATE MESSAGES TABLE
+-- =====================================================
+
+ALTER TABLE messages
+ADD COLUMN IF NOT EXISTS conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE;
+
+CREATE INDEX IF NOT EXISTS idx_messages_conversation
+ON messages(conversation_id);

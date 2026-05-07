@@ -45,7 +45,7 @@ import MessageCenter from "./pages/donor/MessageCenter";
 import FullNGOProfile from "./pages/donor/FullNGOProfile";
 import OngoingCampaigns from "./pages/donor/OngoingCampaigns";
 import DonateMoney from "@/pages/donor/DonateMoney";
-
+import MyMoneyDonations from "./pages/donor/MyMoneyDonations";
 // 🏢 NGO Pages
 import NGODashboard from "./pages/ngo/Dashboard";
 import CreateCampaign from "./pages/ngo/CreateCampaign";
@@ -66,7 +66,7 @@ import NGONeeds from "./pages/ngo/Needs";
 import CampaignHistory from "./pages/ngo/CampaignHistory";
 import CampaignEdit from "./pages/ngo/CampaignEdit";
 import CampaignDonors from "./pages/ngo/CampaignDonors";
-
+import NGOBankDetails from "./pages/ngo/NGOBankDetails";
 // 🟢 NEW PAGE — NGO MONEY RECEIVED PAGE
 import MoneyReceived from "./pages/ngo/MoneyReceived";
 
@@ -236,6 +236,10 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+  path="/donor/my-money-donations"
+  element={<MyMoneyDonations />}
+/>
 
             {/* 🏢 NGO ROUTES */}
             <Route
@@ -418,6 +422,10 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+  path="/ngo/bank-details"
+  element={<NGOBankDetails />}
+/>
 
             {/* 🤝 VOLUNTEER ROUTES */}
             <Route

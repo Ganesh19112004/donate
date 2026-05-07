@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import {
+  useParams,
+  Link,
+  useNavigate,
+} from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft,
@@ -26,7 +30,7 @@ const markerIcon = new L.Icon({
 
 const FullNGOProfile = () => {
   const { id } = useParams<{ id: string }>();
-
+const navigate = useNavigate();
   const [ngo, setNgo] = useState<any>(null);
   const [gallery, setGallery] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -199,15 +203,54 @@ const FullNGOProfile = () => {
           </Link>
         </div>
 
-        {/* FAVORITE BUTTON */}
-        <button
-          onClick={toggleFavorite}
-          className={`mb-4 px-4 py-2 rounded-lg ${
-            isFav ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-700"
-          }`}
-        >
-          {isFav ? "♥ Favorited" : "♡ Add to Favorites"}
-        </button>
+        {/* ACTION BUTTONS */}
+
+<div className="flex flex-wrap gap-3 mb-6">
+
+  {/* FAVORITE */}
+
+  <button
+    onClick={toggleFavorite}
+    className={`px-5 py-3 rounded-xl font-semibold transition shadow
+
+    ${
+      isFav
+        ? "bg-red-100 text-red-600 hover:bg-red-200"
+        : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+    }
+    `}
+  >
+    {isFav
+      ? "♥ Favorited"
+      : "♡ Add to Favorites"}
+  </button>
+
+  {/* MESSAGE NGO */}
+
+  <button
+    onClick={() =>
+      navigate(
+        `/donor/messages?ngo=${ngo.id}`
+      )
+    }
+    className="px-5 py-3 rounded-xl font-semibold bg-green-600 hover:bg-green-700 text-white transition shadow"
+  >
+    💬 Message NGO
+  </button>
+
+  {/* DONATE MONEY */}
+
+  <button
+    onClick={() =>
+      navigate(
+        `/donor/donate-money`
+      )
+    }
+    className="px-5 py-3 rounded-xl font-semibold bg-blue-600 hover:bg-blue-700 text-white transition shadow"
+  >
+    ₹ Donate Money
+  </button>
+</div>
 
         {/* MAIN IMAGE + DETAILS */}
         <div className="grid md:grid-cols-3 gap-6 mb-6">

@@ -1,167 +1,217 @@
 import { supabase } from "@/integrations/supabase/client";
 
-/* ---------------------------------------------------
-   1️⃣ Fetch chat messages between two users
----------------------------------------------------- */
-export const getChatMessages = async (userId: string, otherId: string) => {
+/* =====================================================
+   SEND MESSAGE
+===================================================== */
+
+export async function sendMessage(
+  conversationId: string,
+  senderId: string,
+  senderRole: string,
+  message: string,
+  messageType = "text",
+  mediaUrl = ""
+) {
+  return await supabase
+    .from("messages")
+    .insert({
+      conversation_id: conversationId,
+
+      sender_id: senderId,
+
+      sender_role: senderRole,
+
+      message,
+
+      message_type: messageType,
+
+      media_url: mediaUrl,
+    });
+}
+
+/* =====================================================
+   GET CHAT MESSAGES
+===================================================== */
+
+export async function getChatMessages(
+  conversationId: string
+) {
   return await supabase
     .from("messages")
     .select("*")
-    .or(
-      `and(sender_id.eq.${userId},receiver_id.eq.${otherId}),
-       and(sender_id.eq.${otherId},receiver_id.eq.${userId})`
+    .eq(
+      "conversation_id",
+      conversationId
     )
-    .order("created_at", { ascending: true });
-};
+    .order("created_at", {
+      ascending: true,
+    });
+}
 
-/* ---------------------------------------------------
-   2️⃣ Send message (supports: text, image, audio, file)
----------------------------------------------------- */
-export const sendMessage = async (
-  sender_id: string,
-  sender_role: "donor" | "ngo" | "volunteer",
-  receiver_id: string,
-  receiver_role: "donor" | "ngo" | "volunteer",
-  message: string,
-  message_type: "text" | "image" | "audio" | "file" | "emoji" | "system" = "text",
-  media_url?: string
-) => {
-  return await supabase.from("messages").insert({
-    sender_id,
-    sender_role,
-    receiver_id,
-    receiver_role,
-    message,
-    media_url: media_url || null,
-    message_type,
-    read_status: false,
-  });
-};
+/* =====================================================
+   REALTIME SUBSCRIBE
+===================================================== */
 
-/* ---------------------------------------------------
-   3️⃣ Real-time subscription
----------------------------------------------------- */
-export const subscribeToMessages = (
-  userId: string,
-  otherId: string,
-  callback: (msg: any) => void
-) => {
+export function subscribeToMessages(
+  conversationId: string,
+  callback: any
+) {
   return supabase
-    .channel(`chat-${userId}-${otherId}`)
+    .channel(
+      `chat-${conversationId}`
+    )
     .on(
       "postgres_changes",
-      { event: "INSERT", schema: "public", table: "messages" },
+      {
+        event: "INSERT",
+
+        schema: "public",
+
+        table: "messages",
+      },
       (payload) => {
-        const msg = payload.new;
+        const msg: any = payload.new;
 
         if (
-          (msg.sender_id === userId && msg.receiver_id === otherId) ||
-          (msg.sender_id === otherId && msg.receiver_id === userId)
+          msg.conversation_id ===
+          conversationId
         ) {
           callback(msg);
         }
       }
     )
     .subscribe();
-};
+}
 
-/* ---------------------------------------------------
-   4️⃣ Get chat inbox list
----------------------------------------------------- */
-export const getUserChatList = async (userId: string) => {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-    .order("created_at", { ascending: false });
+/* =====================================================
+   MARK AS READ
+===================================================== */
 
-  if (error || !data) return [];
-
-  const map = new Map();
-
-  data.forEach((msg) => {
-    const otherUser =
-      msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
-
-    if (!map.has(otherUser)) {
-      map.set(otherUser, msg);
-    }
-  });
-
-  return Array.from(map.values());
-};
-
-/* ---------------------------------------------------
-   5️⃣ Mark as read
----------------------------------------------------- */
-export const markMessagesAsRead = async (userId: string, otherId: string) => {
+export async function markMessagesAsRead(
+  conversationId: string,
+  currentUser: string
+) {
   return await supabase
     .from("messages")
-    .update({ read_status: true })
-    .eq("receiver_id", userId)
-    .eq("sender_id", otherId)
+    .update({
+      read_status: true,
+    })
+    .eq(
+      "conversation_id",
+      conversationId
+    )
+    .neq("sender_id", currentUser)
     .eq("read_status", false);
-};
+}
 
-/* ---------------------------------------------------
-   6️⃣ Typing indicator
----------------------------------------------------- */
-export const sendTypingStatus = async (
-  sender_id: string,
-  receiver_id: string,
-  isTyping: boolean
-) => {
-  return await supabase.channel("typing-status").send({
-    type: "broadcast",
-    event: "typing",
-    payload: {
-      sender_id,
-      receiver_id,
-      typing: isTyping,
-    },
-  });
-};
+/* =====================================================
+   USER CHAT LIST
+===================================================== */
 
-/* ---------------------------------------------------
-   7️⃣ Subscribe to typing
----------------------------------------------------- */
-export const subscribeToTyping = (
-  userId: string,
-  callback: (data: any) => void
-) => {
+export async function getUserChatList(
+  userId: string
+) {
+  const { data } = await supabase
+    .from(
+      "conversation_participants"
+    )
+    .select(`
+      conversation_id,
+      conversations (
+        id,
+        updated_at
+      )
+    `)
+    .eq("user_id", userId);
+
+  return data || [];
+}
+
+/* =====================================================
+   TYPING STATUS
+===================================================== */
+
+export async function sendTypingStatus(
+  senderId: string,
+  receiverId: string,
+  typing: boolean
+) {
+  return await supabase
+    .from("typing_status")
+    .upsert({
+      sender_id: senderId,
+
+      receiver_id: receiverId,
+
+      typing,
+
+      updated_at: new Date(),
+    });
+}
+
+export function subscribeToTyping(
+  currentUser: string,
+  callback: any
+) {
   return supabase
-    .channel("typing-status")
-    .on("broadcast", { event: "typing" }, (payload) => {
-      if (payload.payload.receiver_id === userId) {
-        callback(payload.payload);
+    .channel(
+      `typing-${currentUser}`
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+
+        schema: "public",
+
+        table: "typing_status",
+      },
+      (payload) => {
+        callback(payload.new);
       }
-    })
+    )
     .subscribe();
-};
+}
 
-/* ---------------------------------------------------
-   8️⃣ Online / Offline Presence
----------------------------------------------------- */
-export const broadcastOnline = async (userId: string) => {
-  return await supabase.channel("presence").track({
-    id: userId,
-    online: true,
-    last_active: new Date().toISOString(),
-  });
-};
+/* =====================================================
+   ONLINE PRESENCE
+===================================================== */
 
-export const subscribeToOnlineStatus = (
-  callback: (users: any[]) => void
-) => {
-  const channel = supabase.channel("presence", {
-    config: {
-      presence: { key: Math.random().toString() },
-    },
-  });
+export async function updatePresence(
+  userId: string,
+  role: string,
+  online: boolean
+) {
+  return await supabase
+    .from("user_presence")
+    .upsert({
+      user_id: userId,
 
-  return channel
-    .on("presence", { event: "sync" }, () => {
-      callback(channel.presenceState());
-    })
+      role,
+
+      online,
+
+      last_seen: new Date(),
+    });
+}
+
+export function subscribeToPresence(
+  callback: any
+) {
+  return supabase
+    .channel("presence-system")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+
+        schema: "public",
+
+        table: "user_presence",
+      },
+      (payload) => {
+        callback(payload.new);
+      }
+    )
     .subscribe();
-};
+}
