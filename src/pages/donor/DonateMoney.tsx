@@ -23,7 +23,7 @@ declare global {
   }
 }
 
-const RAZORPAY_KEY_ID = "api";
+const RAZORPAY_KEY_ID = "rzp_test_SlNseXTPU2ceUA";
 
 export default function DonateMoney() {
   const [ngos, setNgos] =
