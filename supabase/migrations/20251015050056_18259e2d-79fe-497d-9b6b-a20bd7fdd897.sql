@@ -1348,3 +1348,28 @@ ADD COLUMN IF NOT EXISTS conversation_id UUID REFERENCES conversations(id) ON DE
 
 CREATE INDEX IF NOT EXISTS idx_messages_conversation
 ON messages(conversation_id);
+
+ALTER TABLE messages
+ALTER COLUMN created_at
+TYPE TIMESTAMPTZ
+USING created_at AT TIME ZONE 'Asia/Kolkata';
+
+ALTER TABLE conversations
+ALTER COLUMN created_at
+TYPE TIMESTAMPTZ
+USING created_at AT TIME ZONE 'Asia/Kolkata';
+
+ALTER TABLE conversations
+ALTER COLUMN updated_at
+TYPE TIMESTAMPTZ
+USING updated_at AT TIME ZONE 'Asia/Kolkata';
+
+ALTER TABLE typing_status
+ALTER COLUMN updated_at
+TYPE TIMESTAMPTZ
+USING updated_at AT TIME ZONE 'Asia/Kolkata';
+
+ALTER TABLE user_presence
+ALTER COLUMN last_seen
+TYPE TIMESTAMPTZ
+USING last_seen AT TIME ZONE 'Asia/Kolkata';

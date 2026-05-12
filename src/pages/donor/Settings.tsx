@@ -29,7 +29,7 @@ const DonorSettings = () => {
     image_url: "",
   });
 
-  // Load donor data
+  // Load donor dataA
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {

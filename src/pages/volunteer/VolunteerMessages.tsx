@@ -732,19 +732,18 @@ const VolunteerMessages = () => {
 
                           <div className="flex justify-end items-center gap-1 mt-2 text-[11px] opacity-70">
 
-                            {new Date(
-                              msg.created_at
-                            ).toLocaleTimeString(
-                              [],
-                              {
-                                hour:
-                                  "2-digit",
-
-                                minute:
-                                  "2-digit",
-                              }
-                            )}
-
+                            {
+  new Date(
+    msg.created_at
+  ).toLocaleTimeString(
+    "en-IN",
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }
+  )
+}
                             {mine &&
                               (msg.read_status ? (
                                 <CheckCheck size={14} />
