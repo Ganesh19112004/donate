@@ -114,3 +114,65 @@ ON storage.objects
 FOR DELETE
 TO authenticated
 USING (bucket_id = 'donation_images');
+
+-- PUBLIC READ
+CREATE POLICY "Public read donation images"
+ON storage.objects
+FOR SELECT
+TO public
+USING (bucket_id = 'donation-images');
+
+-- AUTHENTICATED UPLOAD
+CREATE POLICY "Authenticated upload donation images"
+ON storage.objects
+FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'donation-images');
+
+-- UPDATE
+CREATE POLICY "Authenticated update donation images"
+ON storage.objects
+FOR UPDATE
+TO authenticated
+USING (bucket_id = 'donation-images');
+
+-- DELETE
+CREATE POLICY "Authenticated delete donation images"
+ON storage.objects
+FOR DELETE
+TO authenticated
+USING (bucket_id = 'donation-images');
+
+-- REMOVE OLD POLICIES FIRST
+DROP POLICY IF EXISTS "Public read donation images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated upload donation images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated update donation images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated delete donation images" ON storage.objects;
+
+-- PUBLIC READ
+CREATE POLICY "Public read donation images"
+ON storage.objects
+FOR SELECT
+TO public
+USING (bucket_id = 'donation-images');
+
+-- ALLOW ANYONE TO UPLOAD
+CREATE POLICY "Anyone can upload donation images"
+ON storage.objects
+FOR INSERT
+TO public
+WITH CHECK (bucket_id = 'donation-images');
+
+-- ALLOW UPDATE
+CREATE POLICY "Anyone can update donation images"
+ON storage.objects
+FOR UPDATE
+TO public
+USING (bucket_id = 'donation-images');
+
+-- ALLOW DELETE
+CREATE POLICY "Anyone can delete donation images"
+ON storage.objects
+FOR DELETE
+TO public
+USING (bucket_id = 'donation-images');

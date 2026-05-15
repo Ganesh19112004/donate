@@ -1,330 +1,898 @@
 import { useEffect, useState } from "react";
+
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, XCircle, Package, Loader2 } from "lucide-react";
+
+import {
+  CheckCircle,
+  XCircle,
+  Package,
+  Loader2,
+  Truck,
+  Phone,
+  MapPin,
+  User,
+} from "lucide-react";
 
 const ManageDonations = () => {
-  const [donations, setDonations] = useState<any[]>([]);
-  const [volunteers, setVolunteers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [assigning, setAssigning] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ [key: string]: string }>({});
-  const ngo = JSON.parse(localStorage.getItem("user") || "{}");
+  const [donations, setDonations] =
+    useState<any[]>([]);
+
+  const [volunteers, setVolunteers] =
+    useState<any[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [assigning, setAssigning] =
+    useState<string | null>(null);
+
+  const [feedback, setFeedback] =
+    useState<{
+      [key: string]: string;
+    }>({});
+
+  const ngo = JSON.parse(
+    localStorage.getItem("user") ||
+      "{}"
+  );
+
+  /* =====================================================
+                      FETCH DONATIONS
+     ===================================================== */
 
   useEffect(() => {
     if (!ngo?.id) return;
+
     fetchDonations();
+
     fetchVolunteers();
   }, []);
 
-  // 🟦 Fetch NGO donations
-  const fetchDonations = async () => {
-    setLoading(true);
+  const fetchDonations =
+    async () => {
+      setLoading(true);
 
-    const { data, error } = await supabase
-      .from("donations")
-      .select(`
-        *,
-        donors(name, email, phone, address, image_url)
-      `)
-      .eq("ngo_id", ngo.id)
-      .neq("status", "Cancelled")
-      .order("created_at", { ascending: false });
+      const { data, error } =
+        await supabase
+          .from("donations")
+          .select(`
+          *,
+          donors (
+            name,
+            email,
+            phone,
+            address,
+            image_url
+          )
+        `)
 
-    if (!error) setDonations(data || []);
-    setLoading(false);
-  };
+          .eq("ngo_id", ngo.id)
 
-  // 🟩 Fetch Volunteers (via ngo_id OR mapping table)
-  const fetchVolunteers = async () => {
-    let { data: volunteers } = await supabase
-      .from("volunteers")
-      .select("id, name, email")
-      .eq("ngo_id", ngo.id);
+          .neq(
+            "status",
+            "Cancelled"
+          )
 
-    if (!volunteers?.length) {
-      const { data: mapped } = await supabase
-        .from("ngo_volunteers")
-        .select("volunteers (id, name, email)")
+          .order("created_at", {
+            ascending: false,
+          });
+
+      if (!error) {
+        setDonations(data || []);
+      }
+
+      setLoading(false);
+    };
+
+  /* =====================================================
+                    FETCH VOLUNTEERS
+     ===================================================== */
+
+  const fetchVolunteers =
+    async () => {
+      let {
+        data: volunteers,
+      } = await supabase
+        .from("volunteers")
+        .select(
+          "id, name, email"
+        )
+
         .eq("ngo_id", ngo.id);
 
-      volunteers = mapped?.map((m: any) => m.volunteers) || [];
-    }
+      if (
+        !volunteers?.length
+      ) {
+        const {
+          data: mapped,
+        } = await supabase
+          .from(
+            "ngo_volunteers"
+          )
 
-    setVolunteers(volunteers || []);
-  };
+          .select(`
+          volunteers (
+            id,
+            name,
+            email
+          )
+        `)
 
-  // ✅ Accept Donation
-  const handleAccept = async (id: string) => {
-    await supabase
-      .from("donations")
-      .update({
-        status: "Accepted",
-        updated_at: new Date(),
-      })
-      .eq("id", id);
+          .eq("ngo_id", ngo.id);
 
-    await supabase.from("donation_events").insert({
-      donation_id: id,
-      event: "Accepted",
-      created_by: ngo.id,
-    });
+        volunteers =
+          mapped?.map(
+            (m: any) =>
+              m.volunteers
+          ) || [];
+      }
 
-    alert("✅ Donation accepted!");
-    fetchDonations();
-  };
+      setVolunteers(
+        volunteers || []
+      );
+    };
 
-  // ❌ Reject Donation
-  const handleReject = async (id: string) => {
-    await supabase
-      .from("donations")
-      .update({
-        status: "Cancelled",
-        updated_at: new Date(),
-      })
-      .eq("id", id);
+  /* =====================================================
+                      ACCEPT
+     ===================================================== */
 
-    await supabase.from("donation_events").insert({
-      donation_id: id,
-      event: "Rejected",
-      created_by: ngo.id,
-    });
-
-    alert("❌ Donation rejected!");
-    fetchDonations();
-  };
-
-  // 🚚 Improved Volunteer Assignment (NO DUPLICATES)
-  const handleAssignVolunteer = async (donationId: string, volunteerId: string) => {
-    if (!volunteerId) return;
-
-    setAssigning(donationId);
-
-    // 1️⃣ Check if donation already has an assignment
-    const { data: existing } = await supabase
-      .from("volunteer_assignments")
-      .select("id, status")
-      .eq("donation_id", donationId)
-      .maybeSingle();
-
-    // ❌ prevent duplicate active assignments
-    if (existing && existing.status !== "Cancelled") {
-      setAssigning(null);
-      return alert("⚠ This donation already has an active volunteer assigned.");
-    }
-
-    // 2️⃣ If previous was CANCELLED → Update instead of inserting
-    if (existing && existing.status === "Cancelled") {
+  const handleAccept =
+    async (id: string) => {
       await supabase
-        .from("volunteer_assignments")
+        .from("donations")
+
         .update({
-          volunteer_id: volunteerId,
-          status: "Assigned",
-          updated_at: new Date(),
+          status: "Accepted",
+
+          updated_at:
+            new Date(),
         })
-        .eq("id", existing.id);
-    } else {
-      // 3️⃣ New assignment
-      await supabase.from("volunteer_assignments").insert({
-        donation_id: donationId,
-        volunteer_id: volunteerId,
-        ngo_id: ngo.id,
-        status: "Assigned",
-      });
-    }
 
-    // 4️⃣ Update donation table
-    await supabase
-      .from("donations")
-      .update({
-        assigned_volunteer: volunteerId,
-        status: "Assigned",
-        assigned_at: new Date(),
-        updated_at: new Date(),
-      })
-      .eq("id", donationId);
+        .eq("id", id);
 
-    // 5️⃣ Log Event
-    await supabase.from("donation_events").insert({
-      donation_id: donationId,
-      event: "Volunteer Assigned",
-      created_by: ngo.id,
-    });
+      await supabase
+        .from(
+          "donation_events"
+        )
 
-    setAssigning(null);
-    alert("🚚 Volunteer assigned successfully!");
-    fetchDonations();
-  };
+        .insert({
+          donation_id: id,
 
-  // 🎉 Mark Completed
-  const handleComplete = async (id: string) => {
-    await supabase
-      .from("donations")
-      .update({
-        status: "Completed",
-        delivered_at: new Date(),
-        updated_at: new Date(),
-        ngo_feedback: feedback[id] || null,
-      })
-      .eq("id", id);
+          event:
+            "Donation Accepted",
 
-    await supabase.from("donation_events").insert({
-      donation_id: id,
-      event: "Completed",
-      note: feedback[id] || null,
-      created_by: ngo.id,
-    });
+          created_by: ngo.id,
+        });
 
-    alert("🎉 Donation marked as completed!");
-    fetchDonations();
-  };
+      alert(
+        "✅ Donation accepted!"
+      );
+
+      fetchDonations();
+    };
+
+  /* =====================================================
+                      REJECT
+     ===================================================== */
+
+  const handleReject =
+    async (id: string) => {
+      await supabase
+        .from("donations")
+
+        .update({
+          status: "Cancelled",
+
+          updated_at:
+            new Date(),
+        })
+
+        .eq("id", id);
+
+      await supabase
+        .from(
+          "donation_events"
+        )
+
+        .insert({
+          donation_id: id,
+
+          event:
+            "Donation Rejected",
+
+          created_by: ngo.id,
+        });
+
+      alert(
+        "❌ Donation rejected!"
+      );
+
+      fetchDonations();
+    };
+
+  /* =====================================================
+                    ASSIGN VOLUNTEER
+     ===================================================== */
+
+  const handleAssignVolunteer =
+    async (
+      donationId: string,
+      volunteerId: string
+    ) => {
+      if (!volunteerId)
+        return;
+
+      setAssigning(
+        donationId
+      );
+
+      const {
+        data: existing,
+      } = await supabase
+        .from(
+          "volunteer_assignments"
+        )
+
+        .select(
+          "id, status"
+        )
+
+        .eq(
+          "donation_id",
+          donationId
+        )
+
+        .maybeSingle();
+
+      if (
+        existing &&
+        existing.status !==
+          "Cancelled"
+      ) {
+        setAssigning(null);
+
+        return alert(
+          "Volunteer already assigned."
+        );
+      }
+
+      if (
+        existing &&
+        existing.status ===
+          "Cancelled"
+      ) {
+        await supabase
+          .from(
+            "volunteer_assignments"
+          )
+
+          .update({
+            volunteer_id:
+              volunteerId,
+
+            status:
+              "Assigned",
+
+            updated_at:
+              new Date(),
+          })
+
+          .eq(
+            "id",
+            existing.id
+          );
+      } else {
+        await supabase
+          .from(
+            "volunteer_assignments"
+          )
+
+          .insert({
+            donation_id:
+              donationId,
+
+            volunteer_id:
+              volunteerId,
+
+            ngo_id: ngo.id,
+
+            status:
+              "Assigned",
+          });
+      }
+
+      await supabase
+        .from("donations")
+
+        .update({
+          assigned_volunteer:
+            volunteerId,
+
+          status:
+            "Assigned",
+
+          assigned_at:
+            new Date(),
+
+          updated_at:
+            new Date(),
+        })
+
+        .eq(
+          "id",
+          donationId
+        );
+
+      await supabase
+        .from(
+          "donation_events"
+        )
+
+        .insert({
+          donation_id:
+            donationId,
+
+          event:
+            "Volunteer Assigned",
+
+          created_by: ngo.id,
+        });
+
+      setAssigning(null);
+
+      alert(
+        "🚚 Volunteer assigned!"
+      );
+
+      fetchDonations();
+    };
+
+  /* =====================================================
+                      COMPLETE
+     ===================================================== */
+
+  const handleComplete =
+    async (id: string) => {
+      await supabase
+        .from("donations")
+
+        .update({
+          status:
+            "Completed",
+
+          delivered_at:
+            new Date(),
+
+          updated_at:
+            new Date(),
+
+          ngo_feedback:
+            feedback[id] ||
+            null,
+        })
+
+        .eq("id", id);
+
+      await supabase
+        .from(
+          "donation_events"
+        )
+
+        .insert({
+          donation_id: id,
+
+          event:
+            "Donation Completed",
+
+          note:
+            feedback[id] ||
+            null,
+
+          created_by: ngo.id,
+        });
+
+      alert(
+        "🎉 Donation completed!"
+      );
+
+      fetchDonations();
+    };
+
+  /* =====================================================
+                          UI
+     ===================================================== */
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-8">
-      <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-2xl p-8">
-        <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">
-          📦 Manage Donations
+
+      <div className="max-w-7xl mx-auto">
+
+        <h1 className="text-3xl font-bold text-blue-700 mb-8 text-center">
+          📦 Manage Item Donations
         </h1>
 
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="animate-spin text-blue-600" size={28} />
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-blue-600" />
           </div>
-        ) : donations.length === 0 ? (
-          <p className="text-center text-gray-600">No donations available right now.</p>
+        ) : donations.length ===
+          0 ? (
+          <div className="bg-white p-10 rounded-2xl shadow text-center text-gray-600">
+            No donations available.
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border rounded-xl text-sm">
-              <thead className="bg-blue-100 text-gray-700">
-                <tr>
-                  <th className="p-3">Image</th>
-                  <th className="p-3">Donor Details</th>
-                  <th className="p-3">Category</th>
-                  <th className="p-3">Description</th>
-                  <th className="p-3">Amount / Qty</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Actions</th>
-                </tr>
-              </thead>
+          <div className="grid gap-6">
 
-              <tbody>
-                {donations.map((d) => (
-                  <tr key={d.id} className="border-b hover:bg-gray-50 transition">
+            {donations.map(
+              (d) => (
+                <div
+                  key={d.id}
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden border"
+                >
+
+                  <div className="grid md:grid-cols-3">
+
                     {/* IMAGE */}
-                    <td className="p-3">
+
+                    <div className="bg-gray-100 flex items-center justify-center p-4">
+
                       {d.image_url ? (
                         <img
-                          src={d.image_url}
+                          src={
+                            d.image_url
+                          }
                           alt="Donation"
-                          className="w-16 h-16 rounded-lg object-cover"
+                          className="w-full h-72 object-cover rounded-xl"
                         />
                       ) : (
-                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
-                          <Package size={20} />
-                        </div>
-                      )}
-                    </td>
-
-                    {/* DONOR INFO */}
-                    <td className="p-3">
-                      <p className="font-bold">{d.donors?.name}</p>
-                      <p className="text-xs text-gray-600">{d.donors?.email}</p>
-                      <p className="text-xs text-gray-600">📞 {d.donors?.phone || "N/A"}</p>
-                      <p className="text-xs text-gray-600">📍 {d.donors?.address || "No address"}</p>
-                    </td>
-
-                    <td className="p-3">{d.category}</td>
-                    <td className="p-3 max-w-xs truncate">{d.description}</td>
-                    <td className="p-3">{d.amount ? `₹${d.amount}` : d.quantity || "—"}</td>
-
-                    {/* STATUS */}
-                    <td className="p-3">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          d.status === "Pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : d.status === "Accepted"
-                            ? "bg-blue-100 text-blue-700"
-                            : d.status === "Assigned"
-                            ? "bg-purple-100 text-purple-700"
-                            : d.status === "Completed"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {d.status}
-                      </span>
-                    </td>
-
-                    {/* ACTIONS */}
-                    <td className="p-3 flex flex-col gap-2">
-                      {d.status === "Pending" && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleAccept(d.id)}
-                            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                          >
-                            <CheckCircle size={14} /> Accept
-                          </button>
-                          <button
-                            onClick={() => handleReject(d.id)}
-                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                          >
-                            <XCircle size={14} /> Reject
-                          </button>
+                        <div className="h-72 w-full rounded-xl bg-gray-200 flex items-center justify-center">
+                          <Package
+                            size={
+                              40
+                            }
+                            className="text-gray-400"
+                          />
                         </div>
                       )}
 
-                      {d.status === "Accepted" && (
-                        <select
-                          onChange={(e) =>
-                            handleAssignVolunteer(d.id, e.target.value)
-                          }
-                          disabled={assigning === d.id}
-                          className="border p-2 rounded-lg"
+                    </div>
+
+                    {/* DETAILS */}
+
+                    <div className="md:col-span-2 p-6 space-y-4">
+
+                      {/* TOP */}
+
+                      <div className="flex justify-between items-start">
+
+                        <div>
+                          <h2 className="text-2xl font-bold text-blue-700">
+                            {
+                              d.item_details
+                            }
+                          </h2>
+
+                          <p className="text-gray-500">
+                            {
+                              d.category
+                            }
+                          </p>
+                        </div>
+
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            d.status ===
+                            "Pending"
+                              ? "bg-yellow-100 text-yellow-700"
+
+                              : d.status ===
+                                "Accepted"
+                              ? "bg-blue-100 text-blue-700"
+
+                              : d.status ===
+                                "Assigned"
+                              ? "bg-purple-100 text-purple-700"
+
+                              : d.status ===
+                                "Completed"
+                              ? "bg-green-100 text-green-700"
+
+                              : "bg-red-100 text-red-700"
+                          }`}
                         >
-                          <option value="">Assign Volunteer</option>
-                          {volunteers.map((v) => (
-                            <option key={v.id} value={v.id}>
-                              {v.name}
-                            </option>
-                          ))}
-                        </select>
-                      )}
+                          {
+                            d.status
+                          }
+                        </span>
 
-                      {d.status === "Assigned" && (
-                        <div className="flex flex-col gap-2">
-                          <textarea
-                            placeholder="Add feedback..."
-                            className="border p-2 rounded text-sm"
-                            value={feedback[d.id] || ""}
-                            onChange={(e) =>
-                              setFeedback({
-                                ...feedback,
-                                [d.id]: e.target.value,
-                              })
+                      </div>
+
+                      {/* DONOR */}
+
+                      <div className="bg-blue-50 rounded-xl p-4 space-y-2">
+
+                        <h3 className="font-bold flex items-center gap-2">
+                          <User
+                            size={
+                              18
                             }
                           />
-                          <button
-                            onClick={() => handleComplete(d.id)}
-                            className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                          >
-                            Mark Completed
-                          </button>
+                          Donor Details
+                        </h3>
+
+                        <p>
+                          <strong>
+                            Name:
+                          </strong>{" "}
+                          {
+                            d.donors
+                              ?.name
+                          }
+                        </p>
+
+                        <p>
+                          <strong>
+                            Email:
+                          </strong>{" "}
+                          {
+                            d.donors
+                              ?.email
+                          }
+                        </p>
+
+                        <p className="flex items-center gap-2">
+                          <Phone
+                            size={
+                              16
+                            }
+                          />
+
+                          {
+                            d.donor_phone ||
+                            "N/A"
+                          }
+                        </p>
+
+                        <p className="flex items-center gap-2">
+                          <MapPin
+                            size={
+                              16
+                            }
+                          />
+
+                          {
+                            d.donors
+                              ?.address ||
+                            "No address"
+                          }
+                        </p>
+
+                      </div>
+
+                      {/* ITEM DETAILS */}
+
+                      <div className="grid md:grid-cols-2 gap-4">
+
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <p>
+                            <strong>
+                              Quantity:
+                            </strong>{" "}
+                            {
+                              d.quantity
+                            }
+                          </p>
+
+                          <p>
+                            <strong>
+                              Condition:
+                            </strong>{" "}
+                            {
+                              d.item_condition ||
+                              "N/A"
+                            }
+                          </p>
+
+                          <p>
+                            <strong>
+                              Brand:
+                            </strong>{" "}
+                            {d.brand ||
+                              "N/A"}
+                          </p>
+
+                          <p>
+                            <strong>
+                              Weight:
+                            </strong>{" "}
+                            {d.weight ||
+                              "N/A"}
+                          </p>
+
+                        </div>
+
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <p>
+                            <strong>
+                              Suitable For:
+                            </strong>{" "}
+                            {
+                              d.age_group ||
+                              "Everyone"
+                            }
+                          </p>
+
+                          <p>
+                            <strong>
+                              Pickup:
+                            </strong>{" "}
+                            {
+                              d.donation_type
+                            }
+                          </p>
+
+                          <p>
+                            <strong>
+                              Status:
+                            </strong>{" "}
+                            {
+                              d.status
+                            }
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                      {/* DYNAMIC FIELDS */}
+
+                      {d.dynamic_fields &&
+                        Object.keys(
+                          d.dynamic_fields
+                        )
+                          .length >
+                          0 && (
+                          <div className="bg-indigo-50 p-4 rounded-xl">
+
+                            <h3 className="font-bold mb-3">
+                              Dynamic Item Details
+                            </h3>
+
+                            <div className="grid md:grid-cols-2 gap-2 text-sm">
+
+                              {Object.entries(
+                                d.dynamic_fields
+                              ).map(
+                                (
+                                  [
+                                    key,
+                                    value,
+                                  ]: any
+                                ) => (
+                                  <div
+                                    key={
+                                      key
+                                    }
+                                  >
+                                    <strong>
+                                      {key.replaceAll(
+                                        "_",
+                                        " "
+                                      )}
+                                      :
+                                    </strong>{" "}
+                                    {String(
+                                      value
+                                    )}
+                                  </div>
+                                )
+                              )}
+
+                            </div>
+
+                          </div>
+                        )}
+
+                      {/* DESCRIPTION */}
+
+                      {d.description && (
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <h3 className="font-bold mb-2">
+                            Description
+                          </h3>
+
+                          <p className="text-gray-700">
+                            {
+                              d.description
+                            }
+                          </p>
                         </div>
                       )}
 
-                      {d.status === "Completed" && (
-                        <span className="text-green-700 flex items-center gap-1">
-                          <CheckCircle size={14} /> Completed
-                        </span>
+                      {/* INSTRUCTIONS */}
+
+                      {d.instructions && (
+                        <div className="bg-yellow-50 rounded-xl p-4">
+                          <h3 className="font-bold mb-2">
+                            Pickup Instructions
+                          </h3>
+
+                          <p>
+                            {
+                              d.instructions
+                            }
+                          </p>
+                        </div>
                       )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+                      {/* ACTIONS */}
+
+                      <div className="pt-4 border-t">
+
+                        {d.status ===
+                          "Pending" && (
+                          <div className="flex gap-3">
+
+                            <button
+                              onClick={() =>
+                                handleAccept(
+                                  d.id
+                                )
+                              }
+                              className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                            >
+                              <CheckCircle
+                                size={
+                                  18
+                                }
+                              />
+                              Accept
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                handleReject(
+                                  d.id
+                                )
+                              }
+                              className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                            >
+                              <XCircle
+                                size={
+                                  18
+                                }
+                              />
+                              Reject
+                            </button>
+
+                          </div>
+                        )}
+
+                        {d.status ===
+                          "Accepted" && (
+                          <div className="space-y-3">
+
+                            <select
+                              onChange={(
+                                e
+                              ) =>
+                                handleAssignVolunteer(
+                                  d.id,
+                                  e.target
+                                    .value
+                                )
+                              }
+
+                              disabled={
+                                assigning ===
+                                d.id
+                              }
+
+                              className="w-full border p-3 rounded-lg"
+                            >
+                              <option value="">
+                                Assign Volunteer
+                              </option>
+
+                              {volunteers.map(
+                                (
+                                  v
+                                ) => (
+                                  <option
+                                    key={
+                                      v.id
+                                    }
+
+                                    value={
+                                      v.id
+                                    }
+                                  >
+                                    {
+                                      v.name
+                                    }
+                                  </option>
+                                )
+                              )}
+
+                            </select>
+
+                          </div>
+                        )}
+
+                        {d.status ===
+                          "Assigned" && (
+                          <div className="space-y-3">
+
+                            <textarea
+                              placeholder="NGO feedback..."
+                              className="w-full border p-3 rounded-lg"
+                              value={
+                                feedback[
+                                  d.id
+                                ] || ""
+                              }
+
+                              onChange={(
+                                e
+                              ) =>
+                                setFeedback(
+                                  {
+                                    ...feedback,
+
+                                    [d.id]:
+                                      e
+                                        .target
+                                        .value,
+                                  }
+                                )
+                              }
+                            />
+
+                            <button
+                              onClick={() =>
+                                handleComplete(
+                                  d.id
+                                )
+                              }
+
+                              className="bg-blue-600 text-white px-5 py-2 rounded-lg flex items-center gap-2"
+                            >
+                              <Truck
+                                size={
+                                  18
+                                }
+                              />
+                              Mark Completed
+                            </button>
+
+                          </div>
+                        )}
+
+                        {d.status ===
+                          "Completed" && (
+                          <div className="text-green-700 font-semibold flex items-center gap-2">
+                            <CheckCircle
+                              size={
+                                18
+                              }
+                            />
+                            Donation Completed
+                          </div>
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+              )
+            )}
+
           </div>
         )}
+
       </div>
     </div>
   );

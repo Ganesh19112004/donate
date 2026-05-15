@@ -747,11 +747,7 @@ const sidebarItems = [
     icon: Database,
   },
 
-  {
-    to: "/admin/settings",
-    label: "Settings",
-    icon: Settings,
-  },
+
 
   {
     to: "/admin/ngo-applications",
@@ -829,16 +825,7 @@ const quickActions = [
     ),
   },
 
-  {
-    to: "/admin/settings",
-    label: "Settings",
-    bg: "bg-orange-600",
-    icon: (
-      <Settings
-        size={34}
-      />
-    ),
-  },
+  
 ];
 
 export default AdminDashboard;

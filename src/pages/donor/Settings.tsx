@@ -225,18 +225,7 @@ const DonorSettings = () => {
           </div>
         </div>
 
-        {/* Theme */}
-        <div className="border rounded-xl p-5 bg-gray-50">
-          <h3 className="font-bold text-blue-700 flex items-center gap-2 mb-3">
-            <Palette size={20} /> Appearance
-          </h3>
-
-          <select className="w-full border p-3 rounded-lg">
-            <option>Light</option>
-            <option>Dark</option>
-            <option>System</option>
-          </select>
-        </div>
+        
 
         {/* Danger Zone */}
         <div className="border rounded-xl p-5 bg-red-50">

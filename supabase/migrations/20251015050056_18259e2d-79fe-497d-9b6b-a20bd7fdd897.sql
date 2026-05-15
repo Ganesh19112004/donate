@@ -1383,3 +1383,36 @@ ALTER COLUMN password DROP NOT NULL;
 
 ALTER TABLE volunteers
 ALTER COLUMN password DROP NOT NULL;
+
+ALTER TABLE donations
+ADD COLUMN IF NOT EXISTS item_condition text,
+
+ADD COLUMN IF NOT EXISTS item_details text,
+
+ADD COLUMN IF NOT EXISTS brand text,
+
+ADD COLUMN IF NOT EXISTS age_group text,
+
+ADD COLUMN IF NOT EXISTS weight text;
+
+
+
+create table donation_otps (
+  id uuid primary key default gen_random_uuid(),
+
+  donation_id uuid references donations(id) on delete cascade,
+
+  otp_code text not null,
+
+  otp_type text not null,
+  -- pickup / delivery
+
+  expires_at timestamptz not null,
+
+  verified boolean default false,
+
+  created_for uuid,
+  -- volunteer id
+
+  created_at timestamptz default now()
+);
