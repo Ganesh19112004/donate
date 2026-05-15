@@ -1,3 +1,4 @@
+```tsx
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -7,72 +8,95 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleOAuth = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
 
-      if (error || !data.session) {
-        return navigate("/auth");
+        if (error || !session?.user) {
+          console.error("Session Error:", error);
+          navigate("/auth");
+          return;
+        }
+
+        const user = session.user;
+
+        const email = user.email?.toLowerCase() || "";
+
+        const name =
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          "User";
+
+        const role =
+          localStorage.getItem("oauth_role") || "donor";
+
+        const table =
+          role === "volunteer"
+            ? "volunteers"
+            : "donors";
+
+        // CHECK EXISTING USER
+        const { data: existingUser, error: fetchError } =
+          await supabase
+            .from(table)
+            .select("*")
+            .eq("email", email)
+            .maybeSingle();
+
+        if (fetchError) {
+          console.error(fetchError);
+        }
+
+        // EXISTING USER
+        if (existingUser) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify(existingUser)
+          );
+
+          localStorage.setItem("role", role);
+
+          navigate(`/${role}/dashboard`);
+
+          return;
+        }
+
+        // CREATE GOOGLE USER
+        const { data: newUser, error: insertError } =
+          await supabase
+            .from(table)
+            .insert({
+              name,
+              email,
+              password: null,
+              auth_id: user.id,
+              provider: "google",
+              created_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+        if (insertError) {
+          console.error("Insert Error:", insertError);
+          alert(insertError.message);
+          navigate("/auth");
+          return;
+        }
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(newUser)
+        );
+
+        localStorage.setItem("role", role);
+
+        navigate(`/${role}/dashboard`);
+      } catch (err) {
+        console.error(err);
+        navigate("/auth");
       }
-
-      const user = data.session.user;
-      const email = user.email?.toLowerCase() || "";
-      const name =
-        user.user_metadata?.full_name ||
-        user.user_metadata?.name ||
-        "User";
-
-      // 🔥 Decide role automatically
-      // If email exists in donors -> donor
-      // If exists in volunteers -> volunteer
-      // Otherwise create donor by default
-
-      // 1️⃣ Check donor
-      const { data: donor } = await supabase
-        .from("donors")
-        .select("*")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (donor) {
-        localStorage.setItem("user", JSON.stringify(donor));
-        localStorage.setItem("role", "donor");
-        return navigate("/donor/dashboard");
-      }
-
-      // 2️⃣ Check volunteer
-      const { data: volunteer } = await supabase
-        .from("volunteers")
-        .select("*")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (volunteer) {
-        localStorage.setItem("user", JSON.stringify(volunteer));
-        localStorage.setItem("role", "volunteer");
-        return navigate("/volunteer/dashboard");
-      }
-
-      // 3️⃣ If not exists → create donor by default
-      const { data: newDonor, error: insertError } = await supabase
-        .from("donors")
-        .insert({
-          name,
-          email,
-          auth_id: user.id,
-          provider: "google",
-          created_at: new Date(),
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error(insertError);
-        return navigate("/auth");
-      }
-
-      localStorage.setItem("user", JSON.stringify(newDonor));
-      localStorage.setItem("role", "donor");
-
-      navigate("/donor/dashboard");
     };
 
     handleOAuth();
@@ -80,9 +104,12 @@ const AuthCallback = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen">
-      <p className="text-lg font-semibold">Signing you in...</p>
+      <p className="text-lg font-semibold">
+        Signing you in...
+      </p>
     </div>
   );
 };
 
 export default AuthCallback;
+```
