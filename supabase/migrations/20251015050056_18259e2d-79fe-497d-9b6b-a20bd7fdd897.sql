@@ -1373,3 +1373,13 @@ ALTER TABLE user_presence
 ALTER COLUMN last_seen
 TYPE TIMESTAMPTZ
 USING last_seen AT TIME ZONE 'Asia/Kolkata';
+
+
+
+
+
+ALTER TABLE donors
+ALTER COLUMN password DROP NOT NULL;
+
+ALTER TABLE volunteers
+ALTER COLUMN password DROP NOT NULL;
