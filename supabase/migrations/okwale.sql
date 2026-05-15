@@ -80,3 +80,37 @@ create policy "Volunteer can update own location"
 on volunteer_live_location
 for all
 using (auth.uid() = volunteer_id);
+
+
+
+-- ===============================
+-- DONATION IMAGES BUCKET POLICIES
+-- ===============================
+
+-- PUBLIC READ
+CREATE POLICY "Public can view donation images"
+ON storage.objects
+FOR SELECT
+TO public
+USING (bucket_id = 'donation_images');
+
+-- AUTHENTICATED UPLOAD
+CREATE POLICY "Authenticated users can upload donation images"
+ON storage.objects
+FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'donation_images');
+
+-- AUTHENTICATED UPDATE
+CREATE POLICY "Authenticated users can update donation images"
+ON storage.objects
+FOR UPDATE
+TO authenticated
+USING (bucket_id = 'donation_images');
+
+-- AUTHENTICATED DELETE
+CREATE POLICY "Authenticated users can delete donation images"
+ON storage.objects
+FOR DELETE
+TO authenticated
+USING (bucket_id = 'donation_images');

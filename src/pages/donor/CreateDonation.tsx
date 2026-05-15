@@ -179,13 +179,13 @@ export default function CreateDonation() {
         const fileName = `${donor.id}-${Date.now()}.${ext}`;
 
         const upload = await supabase.storage
-          .from("donation_images")
+          .from("donation-images")
           .upload(fileName, image);
 
         if (upload.error) throw upload.error;
 
         uploadedImageUrl = supabase.storage
-          .from("donation_images")
+          .from("donation-images")
           .getPublicUrl(upload.data.path).data.publicUrl;
       }
 
