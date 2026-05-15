@@ -1,4 +1,4 @@
-```tsx
+
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +15,7 @@ const AuthCallback = () => {
         } = await supabase.auth.getSession();
 
         if (error || !session?.user) {
-          console.error("Session Error:", error);
+          console.error(error);
           navigate("/auth");
           return;
         }
@@ -38,16 +38,12 @@ const AuthCallback = () => {
             : "donors";
 
         // CHECK EXISTING USER
-        const { data: existingUser, error: fetchError } =
+        const { data: existingUser } =
           await supabase
             .from(table)
             .select("*")
             .eq("email", email)
             .maybeSingle();
-
-        if (fetchError) {
-          console.error(fetchError);
-        }
 
         // EXISTING USER
         if (existingUser) {
@@ -58,18 +54,18 @@ const AuthCallback = () => {
 
           localStorage.setItem("role", role);
 
-          navigate(`/${role}/dashboard`);
+          navigate("/" + role + "/dashboard");
 
           return;
         }
 
-        // CREATE GOOGLE USER
+        // CREATE NEW GOOGLE USER
         const { data: newUser, error: insertError } =
           await supabase
             .from(table)
             .insert({
-              name,
-              email,
+              name: name,
+              email: email,
               password: null,
               auth_id: user.id,
               provider: "google",
@@ -79,7 +75,7 @@ const AuthCallback = () => {
             .single();
 
         if (insertError) {
-          console.error("Insert Error:", insertError);
+          console.error(insertError);
           alert(insertError.message);
           navigate("/auth");
           return;
@@ -92,7 +88,7 @@ const AuthCallback = () => {
 
         localStorage.setItem("role", role);
 
-        navigate(`/${role}/dashboard`);
+        navigate("/" + role + "/dashboard");
       } catch (err) {
         console.error(err);
         navigate("/auth");
@@ -112,4 +108,3 @@ const AuthCallback = () => {
 };
 
 export default AuthCallback;
-```
